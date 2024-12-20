@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld(
     },
     testCommand: (command) => {
       return ipcRenderer.invoke("test-command", command);
-    }
+    },
+    saveSelectedDevice: (device) => ipcRenderer.invoke("save-selected-device", device)
   }
 );

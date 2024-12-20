@@ -14,11 +14,11 @@ export const DeviceProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Function to select a device and mark it as connected
   const updateSelectedDevice = (device: Device | null) => {
     if (device) {
-      setSelectedDevice({ ...device, isConnected: true }); // Update isConnected to true
-      // save the address
-      
+      setSelectedDevice({ ...device, isConnected: true });
+      localStorage.setItem('selectedDevice', JSON.stringify({ address: device.address, name: device.name })); // Save to localStorage
     } else {
       setSelectedDevice(null);
+      localStorage.removeItem('selectedDevice'); // Clear from localStorage
     }
   };
 

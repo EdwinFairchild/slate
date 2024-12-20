@@ -86,7 +86,10 @@ export function Sidebar({
             {devices.map(device => (
               <button
                 key={device.id}
-                onClick={() => setSelectedDevice(device)}
+                onClick={() => {
+                  setSelectedDevice(device); // Update the context
+                  window.api.saveSelectedDevice(device); // Call the exposed API to save globally
+                }}
                 className={`w-full p-3 rounded-lg text-left transition-colors ${
                   selectedDevice?.id === device.id
                     ? 'bg-blue-100 dark:bg-blue-900'

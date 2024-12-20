@@ -1,6 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
+let savedSelectedDevice = null;
+
+ipcMain.handle('save-selected-device', (_, device) => {
+  savedSelectedDevice = device;
+});
 
 ipcMain.handle('search-devices', async (_, subnet) => {
   let pythonScriptPath;
@@ -14,56 +19,68 @@ ipcMain.handle('search-devices', async (_, subnet) => {
 
   try {
     const { stdout } = await new Promise((resolve, reject) => {
-      exec(`python3 ${pythonScriptPath} ${subnet}`, (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
-        } else if (stderr) {
-          reject(stderr);
-        } else {
-          resolve({ stdout });
+      exec(
+        `python3 ${pythonScriptPath} --discover "${subnet}"`,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error('Error running Python script:', stderr);
+            reject(error);
+          } else {
+            resolve({ stdout });
+          }
         }
-      });
+      );
     });
+
     console.log('Raw Python output:', stdout.trim());
-    return JSON.parse(stdout);
+    return JSON.parse(stdout.trim()); // Parse JSON response
   } catch (error) {
-    console.error('Error running Python script:', error);
-    return [];
+    console.error('Error executing discovery:', error);
+    return { error: error.message };
   }
 });
 
 ipcMain.handle('test-command', async (_, command) => {
-  // Resolve the correct path for the Python script
   let pythonScriptPath;
   if (app.isPackaged) {
-    // Production: Adjust the path to use the unpacked `asar` resource
     pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
   } else {
-    // Development: Use the relative path
     pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
   }
 
   console.log("Resolved Python script path:", pythonScriptPath);
-  
+
+  if (!savedSelectedDevice || !savedSelectedDevice.address) {
+    console.error('No device selected!');
+    return `Error: No device selected`;
+  }
+  const ip = savedSelectedDevice.address;
+
   try {
     const { stdout } = await new Promise((resolve, reject) => {
-      exec(`python3 ${pythonScriptPath} ${command}`, (error, stdout, stderr) => {
-        if (error) {
-          console.error('Error running Python script:', stderr);
-          reject(error);
-        } else {
-          resolve({ stdout });
+      exec(
+        `python3 ${pythonScriptPath} --ip "${ip}" --command "${command}"`,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error('Error running Python script:', stderr);
+            reject(error);
+          } else {
+            resolve({ stdout });
+          }
         }
-      });
+      );
     });
 
+    //console.log(`Command sent to ${deviceName} (${ip}): ${command}`);
     console.log('Raw Python output:', stdout.trim());
-    return stdout.trim();
+    return stdout.trim(); // Return plain text response
   } catch (error) {
     console.error('Error executing command:', error);
-    return 'Error';
+    return `Error: ${error.message}`;
   }
 });
+
+
 
 function createWindow() {
   const mainWindow = new BrowserWindow({

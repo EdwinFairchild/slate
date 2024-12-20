@@ -2,6 +2,10 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { exec } = require("child_process");
+let savedSelectedDevice = null;
+ipcMain.handle("save-selected-device", (_, device) => {
+  savedSelectedDevice = device;
+});
 ipcMain.handle("search-devices", async (_, subnet) => {
   let pythonScriptPath;
   if (app.isPackaged) {
@@ -12,21 +16,23 @@ ipcMain.handle("search-devices", async (_, subnet) => {
   console.log("Resolved Python script path:", pythonScriptPath);
   try {
     const { stdout } = await new Promise((resolve, reject) => {
-      exec(`python3 ${pythonScriptPath} ${subnet}`, (error, stdout2, stderr) => {
-        if (error) {
-          reject(error);
-        } else if (stderr) {
-          reject(stderr);
-        } else {
-          resolve({ stdout: stdout2 });
+      exec(
+        `python3 ${pythonScriptPath} --discover "${subnet}"`,
+        (error, stdout2, stderr) => {
+          if (error) {
+            console.error("Error running Python script:", stderr);
+            reject(error);
+          } else {
+            resolve({ stdout: stdout2 });
+          }
         }
-      });
+      );
     });
     console.log("Raw Python output:", stdout.trim());
-    return JSON.parse(stdout);
+    return JSON.parse(stdout.trim());
   } catch (error) {
-    console.error("Error running Python script:", error);
-    return [];
+    console.error("Error executing discovery:", error);
+    return { error: error.message };
   }
 });
 ipcMain.handle("test-command", async (_, command) => {
@@ -37,22 +43,30 @@ ipcMain.handle("test-command", async (_, command) => {
     pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
   }
   console.log("Resolved Python script path:", pythonScriptPath);
+  if (!savedSelectedDevice || !savedSelectedDevice.address) {
+    console.error("No device selected!");
+    return `Error: No device selected`;
+  }
+  const ip = savedSelectedDevice.address;
   try {
     const { stdout } = await new Promise((resolve, reject) => {
-      exec(`python3 ${pythonScriptPath} ${command}`, (error, stdout2, stderr) => {
-        if (error) {
-          console.error("Error running Python script:", stderr);
-          reject(error);
-        } else {
-          resolve({ stdout: stdout2 });
+      exec(
+        `python3 ${pythonScriptPath} --ip "${ip}" --command "${command}"`,
+        (error, stdout2, stderr) => {
+          if (error) {
+            console.error("Error running Python script:", stderr);
+            reject(error);
+          } else {
+            resolve({ stdout: stdout2 });
+          }
         }
-      });
+      );
     });
     console.log("Raw Python output:", stdout.trim());
     return stdout.trim();
   } catch (error) {
     console.error("Error executing command:", error);
-    return "Error";
+    return `Error: ${error.message}`;
   }
 });
 function createWindow() {
