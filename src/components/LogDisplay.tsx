@@ -1,19 +1,19 @@
 import React from 'react';
 import { AlertCircle, Info } from 'lucide-react';
-import type { LogMessage } from '../types';
+import { useDevice } from '../components/DeviceContext';
 
-interface LogDisplayProps {
-  logs: LogMessage[];
-}
-
-export function LogDisplay({ logs }: LogDisplayProps) {
+export function LogDisplay() {
+  const { logs } = useDevice(); // Access logs from context
   const lastLogs = logs.slice(-3).reverse(); // Show only last 3 logs
 
   return (
     <div className="h-full p-4 overflow-y-auto">
       {lastLogs.length > 0 ? (
-        lastLogs.map((log) => (
-          <div key={log.id} className="flex items-center space-x-2 mb-2">
+        lastLogs.map((log, index) => (
+          <div
+            key={`${log.timestamp}-${index}`} // Unique key using timestamp and index
+            className="flex items-center space-x-2 mb-2"
+          >
             {log.type === 'error' ? (
               <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
             ) : (
@@ -34,9 +34,7 @@ export function LogDisplay({ logs }: LogDisplayProps) {
           </div>
         ))
       ) : (
-        <div className="text-sm text-gray-500">
-          No messages
-        </div>
+        <div className="text-sm text-gray-500">No messages</div>
       )}
     </div>
   );

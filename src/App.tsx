@@ -9,7 +9,7 @@ import { TempPage } from './pages/TempPage';
 import { MockInstrument } from './services/mockInstrument';
 import { mockTests } from './services/mockData';
 import { useTheme } from './hooks/useTheme';
-import { useLogger } from './hooks/useLogger';
+
 import type { SCPICommand, Device, LogMessage, Page } from './types';
 import type { TestResult } from './types/test';
 
@@ -64,7 +64,7 @@ export default function App() {
     }]);
   };
 
-  useLogger(addLog);
+
 
   const renderActivePage = () => {
     switch (activePage) {
