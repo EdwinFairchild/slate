@@ -50,7 +50,21 @@
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      {
+        "from": "src/services/python",
+        "to": "python",
+        "filter": [
+          "*.py",
+          "*.so"
+        ]
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "src/services/python",
+        "to": "python"
+      }
     ],
     "mac": {
       "category": "public.app-category.developer-tools"

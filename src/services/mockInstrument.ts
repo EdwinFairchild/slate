@@ -2,6 +2,7 @@ import type { Device } from '../types';
 
 export class MockInstrument {
   private static instance: MockInstrument;
+
   private constructor() {}
 
   static getInstance(): MockInstrument {
@@ -12,27 +13,26 @@ export class MockInstrument {
   }
 
   async searchDevices(): Promise<Device[]> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    return [
-      {
-        id: 'scope1',
-        name: 'Keysight DSOX1102G',
-        model: 'DSOX1102G',
-        address: '192.168.1.100',
-        type: 'SCOPE',
-        isConnected: false
-      },
-      {
-        id: 'dmm1',
-        name: 'Keysight 34461A',
-        model: '34461A',
-        address: '192.168.1.101',
-        type: 'DMM',
-        isConnected: false
-      }
-    ];
+    if (!window.api || !window.api.searchDevices) {
+      throw new Error('Electron API is not available. Check preload.js and BrowserWindow configuration.');
+    }
+
+    console.log('Calling searchDevices on window.api');
+    const subnet = '10.0.0'; // Replace with your subnet
+    try {
+      const devices = await window.api.searchDevices(subnet);
+      return devices.map((device: any) => ({
+        id: device.id,
+        name: device.name,
+        model: device.type,
+        address: device.address,
+        type: device.type,
+        isConnected: device.isConnected,
+      }));
+    } catch (error) {
+      console.error('Error searching devices:', error);
+      return [];
+    }
   }
 
   async sendCommand(command: string): Promise<string> {

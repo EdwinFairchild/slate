@@ -3,6 +3,7 @@ import { Sun, Moon, Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { DeviceStatus } from './components/DeviceStatus';
 import { LogDisplay } from './components/LogDisplay';
+import { DeviceProvider } from './components/DeviceContext';
 import { TestsPage } from './pages/TestsPage';
 import { TempPage } from './pages/TempPage';
 import { MockInstrument } from './services/mockInstrument';
@@ -25,6 +26,17 @@ export default function App() {
   
   const instrument = MockInstrument.getInstance();
 
+  const handleDeviceSelect = (device: Device) => {
+    
+    // Update the `isConnected` property for the selected device
+    setDevices(prevDevices =>
+      prevDevices.map(d =>
+        d.id === device.id ? { ...d, isConnected: true } : d
+      )
+    );
+    // Update the selected device
+    setSelectedDevice(device);
+  };
   const handleSearchDevices = async () => {
     setIsSearching(true);
     try {
@@ -66,6 +78,7 @@ export default function App() {
   };
 
   return (
+    <DeviceProvider>
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <Sidebar
         isOpen={isSidebarOpen}
@@ -73,7 +86,7 @@ export default function App() {
         selectedDevice={selectedDevice}
         isSearching={isSearching}
         activePage={activePage}
-        onDeviceSelect={setSelectedDevice}
+        onDeviceSelect={handleDeviceSelect}
         onSearchDevices={handleSearchDevices}
         onNavigate={setActivePage}
       />
@@ -104,11 +117,9 @@ export default function App() {
             </button>
           </div>
 
-          {selectedDevice && (
-            <div className="mb-8">
-              <DeviceStatus device={selectedDevice} />
-            </div>
-          )}
+          <main className="mb-8">
+          <DeviceStatus /> {/* Use DeviceStatus here */}
+        </main>
           
           <div className="flex-1 overflow-hidden">
             {renderActivePage()}
@@ -120,5 +131,6 @@ export default function App() {
         </div>
       </div>
     </div>
+    </DeviceProvider>
   );
 }

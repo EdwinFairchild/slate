@@ -1,14 +1,13 @@
 import React from 'react';
 import { Search, Loader2, RefreshCw, Activity, Settings } from 'lucide-react';
+import { useDevice } from '../components/DeviceContext';
 import type { Device } from '../types';
 
 interface SidebarProps {
   isOpen: boolean;
   devices: Device[];
-  selectedDevice: Device | null;
   isSearching: boolean;
   activePage: string;
-  onDeviceSelect: (device: Device) => void;
   onSearchDevices: () => void;
   onNavigate: (page: string) => void;
 }
@@ -16,13 +15,13 @@ interface SidebarProps {
 export function Sidebar({
   isOpen,
   devices,
-  selectedDevice,
   isSearching,
   activePage,
-  onDeviceSelect,
   onSearchDevices,
   onNavigate
 }: SidebarProps) {
+  const { selectedDevice, setSelectedDevice } = useDevice();
+
   return (
     <div
       className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
@@ -87,7 +86,7 @@ export function Sidebar({
             {devices.map(device => (
               <button
                 key={device.id}
-                onClick={() => onDeviceSelect(device)}
+                onClick={() => setSelectedDevice(device)}
                 className={`w-full p-3 rounded-lg text-left transition-colors ${
                   selectedDevice?.id === device.id
                     ? 'bg-blue-100 dark:bg-blue-900'

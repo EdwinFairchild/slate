@@ -1,0 +1,24 @@
+to add functionality to a gui element
+- the element html  and event listener live in the .tsx file
+- main.js needs to implement an ipMain.handle fnction that calls python 
+- preload js needs to expose the ipc function
+
+
+
+
+Correct Flow for Adding Functionality
+
+    React Component (e.g., Sidebar.tsx):
+        The HTML/JSX (i.e., what you see visually and the layout) is handled in the component file, such as Sidebar.tsx.
+        Handlers or event listeners (like button click functions) also live in the component file and interact with Electron's APIs.
+
+    Communication with Main Process (IPC):
+        In your component file (e.g., Sidebar.tsx), the listener or handler will invoke a function exposed via preload.js using window.api.xxx (e.g., window.api.testCommand()).
+        This function in preload.js sends the request to the main.js file using ipcRenderer.invoke() or similar methods.
+
+    Backend Logic (main.js):
+        The main.js file listens for events from the renderer process (React component) using ipcMain.handle().
+        You implement the backend logic or call external resources (like Python scripts) here.
+
+    Expose API to Renderer (preload.js):
+        In preload.js, you expose the necessary functions via contextBridge.exposeInMainWorld. These are the functions that your React component can call, effectively "bridging" the React frontend and Electron's backend.

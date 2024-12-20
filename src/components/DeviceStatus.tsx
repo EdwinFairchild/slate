@@ -1,12 +1,15 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
 import type { Device } from '../types';
+import { useDevice } from '../components/DeviceContext'; // Import the context hook
 
 interface DeviceStatusProps {
   device: Device | null;
 }
 
-export function DeviceStatus({ device }: DeviceStatusProps) {
+export function DeviceStatus() {
+  const { selectedDevice: device } = useDevice(); // Get the selected device from the context
+
   if (!device) {
     return (
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4">

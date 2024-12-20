@@ -1,5 +1,69 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const { exec } = require('child_process');
+
+ipcMain.handle('search-devices', async (_, subnet) => {
+  let pythonScriptPath;
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+  } else {
+    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+  }
+
+  console.log("Resolved Python script path:", pythonScriptPath);
+
+  try {
+    const { stdout } = await new Promise((resolve, reject) => {
+      exec(`python3 ${pythonScriptPath} ${subnet}`, (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+        } else if (stderr) {
+          reject(stderr);
+        } else {
+          resolve({ stdout });
+        }
+      });
+    });
+    console.log('Raw Python output:', stdout.trim());
+    return JSON.parse(stdout);
+  } catch (error) {
+    console.error('Error running Python script:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('test-command', async (_, command) => {
+  // Resolve the correct path for the Python script
+  let pythonScriptPath;
+  if (app.isPackaged) {
+    // Production: Adjust the path to use the unpacked `asar` resource
+    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+  } else {
+    // Development: Use the relative path
+    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+  }
+
+  console.log("Resolved Python script path:", pythonScriptPath);
+  
+  try {
+    const { stdout } = await new Promise((resolve, reject) => {
+      exec(`python3 ${pythonScriptPath} ${command}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error('Error running Python script:', stderr);
+          reject(error);
+        } else {
+          resolve({ stdout });
+        }
+      });
+    });
+
+    console.log('Raw Python output:', stdout.trim());
+    return stdout.trim();
+  } catch (error) {
+    console.error('Error executing command:', error);
+    return 'Error';
+  }
+});
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -8,7 +72,9 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true, // Enables contextBridge
+      nodeIntegration: false, // Disables direct Node.js access in renderer
     }
   });
 

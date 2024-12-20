@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld(
@@ -17,6 +18,13 @@ contextBridge.exposeInMainWorld(
         // Deliberately strip event as it includes `sender` 
         ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
+    },
+    searchDevices: (subnet) => {
+      
+      return ipcRenderer.invoke('search-devices', subnet);
+    },
+    testCommand: (command) => {
+      return ipcRenderer.invoke('test-command', command);
     }
-  }
+  },
 );
