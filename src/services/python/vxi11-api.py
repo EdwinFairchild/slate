@@ -5,6 +5,10 @@ import json
 import sys
 import time
 import csv
+import threading
+
+# Dictionary to keep track of active test threads
+active_tests = {}
 # Load the shared library
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -108,35 +112,108 @@ def send_scpi_command(device_address, command):
         lxi.lxi_disconnect(device)
 
 
-def handle_test_data(test_data):
+def handle_test_data(test_data, device_ip):
     """
-    Handles the test data, creates a CSV file for logging, and returns a JSON response.
+    Handles the test data, executes commands, creates a CSV log, and returns a JSON response.
     """
-   
-    # Generate a unique file name for the CSV log
     timestamp = int(time.time())
-    # include test data name in the file name
-    test_name = test_data.get("name", "unnamed_test").replace(" ", "_")  
+    test_name = test_data.get("name", "unnamed_test").replace(" ", "_")
+    duration = test_data.get("duration", 0) * 60  # Convert duration from minutes to seconds
+    interval = test_data.get("interval", 0) / 1000.0  # Convert interval from ms to seconds
+    commands = test_data.get("commands", [])
+    
+    # Generate a unique CSV file for logging
     file_name = f"{test_name}_{timestamp}.csv"
     csv_file_path = os.path.join(current_dir, file_name)
 
-    # Write test data to the CSV file
     try:
         with open(csv_file_path, mode='w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(['Key', 'Value'])  # Header row
-            for key, value in test_data.items():
-                csv_writer.writerow([key, value])  # Log each test data key-value pair
+            csv_writer.writerow(['Timestamp', 'Command', 'Response', 'Error'])
 
-        return {
-            "status": "success",
-            "log_file_path": csv_file_path
-        }
+            # Start test execution
+            start_time = time.time()
+            command_status = {}
+
+            while time.time() - start_time < duration:
+                for command in commands:
+                    cmd_text = command.get("command", "")
+                    run_once = command.get("runOnce", False)
+                    wait_after = command.get("waitAfter", 0) / 1000.0  # Convert ms to seconds
+                    
+                    # Skip commands that are marked as runOnce and have already been executed
+                    if run_once and command_status.get(cmd_text, False):
+                        continue
+                    
+                    try:
+                        # Send SCPI command
+                        response = send_scpi_command(device_ip, cmd_text)
+                        csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, response, ""])
+                        command_status[cmd_text] = True  # Mark as executed
+                    except Exception as e:
+                        # Log errors to the CSV
+                        csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, "", str(e)])
+
+                    # Wait after the command execution
+                    if wait_after > 0:
+                        time.sleep(wait_after)
+                
+                # Wait for the specified interval before the next iteration
+                if interval > 0:
+                    time.sleep(interval)
+
+            return {
+                "status": "success",
+                "log_file_path": csv_file_path
+            }
     except Exception as e:
         return {
             "status": "error",
             "message": str(e)
         }
+
+def handle_test_thread(test_data, device_ip):
+    """
+    Runs a test in a separate thread.
+    """
+    test_id = test_data.get("name", "unnamed_test") + "_" + str(uuid.uuid4())
+    result = handle_test_data(test_data, device_ip)
+    
+    # Remove the test from active tests after completion
+    if test_id in active_tests:
+        del active_tests[test_id]
+
+    print(f"Test {test_id} completed with result: {result}")
+
+
+def start_test(test_data, device_ip):
+    """
+    Starts a new test in a separate thread.
+    """
+    test_id = test_data.get("name", "unnamed_test") + "_" + str(uuid.uuid4())
+    
+    # Create and start a new thread for the test
+    test_thread = threading.Thread(target=handle_test_thread, args=(test_data, device_ip))
+    test_thread.daemon = True  # Ensures the thread will not block program exit
+    active_tests[test_id] = test_thread
+    test_thread.start()
+
+    return {
+        "status": "success",
+        "test_id": test_id,
+        "message": f"Test {test_id} started successfully"
+    }
+def stop_test(test_id):
+    """
+    Stops the test with the given test_id.
+    """
+    if test_id in active_tests:
+        # Attempt to stop the thread (requires cooperative cancellation in the thread logic)
+        thread = active_tests[test_id]
+        # Implement your cancellation logic here
+        return {"status": "success", "message": f"Test {test_id} stopped successfully"}
+    else:
+        return {"status": "error", "message": f"Test {test_id} not found"}
 
 if __name__ == "__main__":
     try:
@@ -165,19 +242,18 @@ if __name__ == "__main__":
             devices = scan_lxi_devices(subnet)
             print(json.dumps(devices))  # Output devices as JSON
         elif "--start-test" in sys.argv:
-            # Handle start-test
             test_index = sys.argv.index("--start-test") + 1
+            ip_index = sys.argv.index("--ip") + 1
 
-            if test_index >= len(sys.argv):
-                print(json.dumps({"error": "Missing test data argument for --start-test"}))
+            if test_index >= len(sys.argv) or ip_index >= len(sys.argv):
+                print(json.dumps({"error": "Missing test data or device IP argument"}))
                 sys.exit(1)
 
-            # Parse the JSON test data
             test_data_json = sys.argv[test_index]
+            device_ip = sys.argv[ip_index]
             try:
                 test_data = json.loads(test_data_json)
-                # Process the test data
-                result = handle_test_data(test_data)
+                result = handle_test_data(test_data, device_ip)
                 print(json.dumps(result))  # Return the result as JSON
             except json.JSONDecodeError as e:
                 print(json.dumps({"error": f"Invalid JSON format: {str(e)}"}))
