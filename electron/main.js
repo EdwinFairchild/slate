@@ -104,6 +104,7 @@ ipcMain.handle('start-test', async (_, testData) => {
   const ip = savedSelectedDevice.address;
 
   try {
+    const startTime = new Date().toISOString();
     // Execute the Python script with test data as JSON
     const result = await new Promise((resolve, reject) => {
       const testDataJSON = JSON.stringify(testData);
@@ -123,7 +124,16 @@ ipcMain.handle('start-test', async (_, testData) => {
     // Parse Python output as JSON
     const parsedResult = JSON.parse(result);
     addLog('info', `Test initiated successfully. Log file: ${parsedResult.log_file_path}`);
-    return parsedResult; // Return parsed JSON
+    // Return a complete test result object for the table
+    return {
+      id: crypto.randomUUID(),
+      name: testData.name,
+      duration: testData.duration,
+      startTime,
+      endTime: null, // Will be updated when the test ends
+      status: 'running', // Initial status
+      logFilePath: parsedResult.log_file_path,
+    };
   } catch (error) {
     addLog('error', 'Error executing start-test:', error);
     return { status: 'error', message: error };
@@ -149,7 +159,7 @@ function createWindow() {
 
   if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
-    mainWindow.webContents.openDevTools();
+  //  mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

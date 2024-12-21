@@ -8,7 +8,6 @@ import { DeviceProvider } from './components/DeviceContext';
 import { TestsPage } from './pages/TestsPage';
 import { TempPage } from './pages/TempPage';
 import { MockInstrument } from './services/mockInstrument';
-import { mockTests } from './services/mockData';
 import { useTheme } from './hooks/useTheme';
 import { TestResultsTable } from './components/TestResultsTable';
 import type { SCPICommand, Device, LogMessage, Page } from './types';
@@ -22,23 +21,54 @@ export default function App() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [tests, setTests] = useState<TestResult[]>(mockTests);
+  const [tests, setTests] = useState<TestResult[]>([]); // Start with no tests
+
   const [logs, setLogs] = useState<LogMessage[]>([]);
   const [activePage, setActivePage] = useState<Page>('tests');
 
   const instrument = MockInstrument.getInstance();
+  const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTime' | 'endTime' | 'logFilePath'>) => {
+    try {
+      const result = await window.api.startTest(test);
 
-  const handleDeviceSelect = (device: Device) => {
+      if (result.status === 'error') {
+        console.error(`Test failed: ${result.message}`);
+      } else {
+        console.log(`Test started successfully. Log file: ${result.logFilePath}`);
 
-    // Update the `isConnected` property for the selected device
-    setDevices(prevDevices =>
-      prevDevices.map(d =>
-        d.id === device.id ? { ...d, isConnected: true } : d
+        // Add the new test to the centralized state
+        setTests((prevTests) => [
+          ...prevTests,
+          {
+            id: result.id,
+            name: result.name,
+            duration: result.duration,
+            startTime: result.startTime,
+            endTime: result.endTime,
+            status: result.status,
+            logFilePath: result.logFilePath,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error(`Unexpected error: ${error}`);
+    }
+  };
+
+  const handleStopTest = (testId: string) => {
+    console.log(`Stopping test with ID: ${testId}`);
+    setTests((prevTests) =>
+      prevTests.map((test) =>
+        test.id === testId ? { ...test, status: 'stopped' } : test
       )
     );
-    // Update the selected device
-    setSelectedDevice(device);
   };
+
+  const handleRerunTest = (testId: string) => {
+    console.log(`Rerunning test with ID: ${testId}`);
+    // Logic for rerunning a test can be added later
+  };
+
   const handleSearchDevices = async () => {
     setIsSearching(true);
     try {
@@ -52,10 +82,7 @@ export default function App() {
     }
   };
 
-  const handleStartTest = (test: any) => {
-    // TODO: Implement test start logic
-    console.log('Starting test:', test);
-  };
+
 
   const addLog = (type: 'info' | 'error', message: string) => {
     setLogs(prev => [...prev, {
@@ -134,7 +161,11 @@ export default function App() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Test Results
               </h2>
-              <TestResultsTable tests={tests} />
+              <TestResultsTable
+              tests={tests} // Pass the centralized state
+              onStopTest={handleStopTest}
+              onRerunTest={handleRerunTest}
+            />
             </div>
           </div>
         </div>

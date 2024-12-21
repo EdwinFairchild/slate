@@ -85,6 +85,7 @@ ipcMain.handle("start-test", async (_, testData) => {
   }
   const ip = savedSelectedDevice.address;
   try {
+    const startTime = (/* @__PURE__ */ new Date()).toISOString();
     const result = await new Promise((resolve, reject) => {
       const testDataJSON = JSON.stringify(testData);
       exec(
@@ -101,7 +102,17 @@ ipcMain.handle("start-test", async (_, testData) => {
     });
     const parsedResult = JSON.parse(result);
     addLog("info", `Test initiated successfully. Log file: ${parsedResult.log_file_path}`);
-    return parsedResult;
+    return {
+      id: crypto.randomUUID(),
+      name: testData.name,
+      duration: testData.duration,
+      startTime,
+      endTime: null,
+      // Will be updated when the test ends
+      status: "running",
+      // Initial status
+      logFilePath: parsedResult.log_file_path
+    };
   } catch (error) {
     addLog("error", "Error executing start-test:", error);
     return { status: "error", message: error };
@@ -124,7 +135,6 @@ function createWindow() {
   const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
   if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
-    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
