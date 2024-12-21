@@ -31,10 +31,10 @@ export const DeviceProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const updateSelectedDevice = (device: Device | null) => {
     if (device) {
       setSelectedDevice({ ...device, isConnected: true }); // Update isConnected to true
-      addLog(`Device selected: ${device.name} (${device.address})`);
+      addLog('info' ,`Device selected: ${device.name} (${device.address})`);
     } else {
       setSelectedDevice(null);
-      addLog(`Device deselected`);
+      addLog('info',`Device deselected`);
     }
   };
 

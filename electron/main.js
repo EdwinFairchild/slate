@@ -84,7 +84,7 @@ ipcMain.handle('test-command', async (_, command) => {
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1400,
     height: 800,
     webPreferences: {
       nodeIntegration: true,
