@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { exec } = require("child_process");
+require("date-fns/locale");
 let savedSelectedDevice = null;
 function addLog(level, ...args) {
   console.log(`[${level.toUpperCase()}]`, ...args);
@@ -74,6 +75,7 @@ ipcMain.handle("test-command", async (_, command) => {
 });
 ipcMain.handle("start-test", async (_, testData) => {
   let pythonScriptPath;
+  console.log(testData);
   if (app.isPackaged) {
     pythonScriptPath = path.join(process.resourcesPath, "python", "vxi11-api.py");
   } else {

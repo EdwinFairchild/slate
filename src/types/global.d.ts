@@ -17,7 +17,7 @@ interface Device {
 }
 interface Command {
   command: string;
-  interval: number;
+  runOnce: boolean;
   waitAfter: number;
 }
 
@@ -25,6 +25,7 @@ interface Test {
   id: string;
   name: string;
   duration: number;
+  interval: number;
   chainCommands: boolean;
   commands: Command[];
   isExpanded: boolean;

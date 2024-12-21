@@ -1,5 +1,0 @@
-Key,Value
-name,test2
-duration,60
-chainCommands,False
-commands,"[{'command': '*IDN?', 'interval': 1000, 'waitAfter': 0}]"

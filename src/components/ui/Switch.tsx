@@ -11,7 +11,10 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
     <button
       role="switch"
       aria-checked={checked}
-      onClick={() => onChange(!checked)}
+      onClick={(e) => {
+        e.preventDefault(); // Stop propagation
+        onChange(!checked);
+      }}
       className={`${
         checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
       } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}

@@ -1,5 +1,0 @@
-Key,Value
-name,test4
-duration,60
-chainCommands,True
-commands,"[{'command': '*IDN?', 'interval': 1000, 'waitAfter': 42}, {'command': 'C1:BSWV?', 'interval': 566, 'waitAfter': 0}]"

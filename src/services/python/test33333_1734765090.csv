@@ -1,5 +1,0 @@
-Key,Value
-name,test33333
-duration,60
-chainCommands,False
-commands,"[{'command': 'asdf', 'interval': 1000, 'waitAfter': 0}]"

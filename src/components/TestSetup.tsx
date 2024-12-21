@@ -9,6 +9,7 @@ interface Test {
   id: string;
   name: string;
   duration: number;
+  interval: number;
   chainCommands: boolean;
   commands: Command[];
   isExpanded: boolean;
@@ -27,8 +28,9 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
       id: crypto.randomUUID(),
       name: '',
       duration: 60,
+      interval: 1000,
       chainCommands: false,
-      commands: [{ command: '', interval: 1000, waitAfter: 0 }],
+      commands: [{ command: '', runOnce: false, waitAfter: 0 }],
       isExpanded: true,
     },
   ]);
@@ -41,8 +43,9 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
         id: crypto.randomUUID(),
         name: '',
         duration: 60,
+        interval: 1000,
         chainCommands: false,
-        commands: [{ command: '', interval: 1000, waitAfter: 0 }],
+        commands: [{ command: '', runOnce: false, waitAfter: 0 }],
         isExpanded: true,
       },
     ]);
@@ -72,7 +75,10 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   // Handle form submission for a test
   const handleSubmit = (test: Test) => async (e: React.FormEvent) => {
     e.preventDefault();
-
+    e.preventDefault();
+    console.log("Form submitted by:", e.nativeEvent?.submitter); // Log submitter info
+    console.log("Test data:", test); // Log test details
+    console.trace("Call stack:"); // Log call stack
     const { id, isExpanded, ...testData } = test; // Exclude local properties
     try {
       await onStartTest(testData); // Call the parent handler to start the test
@@ -130,23 +136,34 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Test Interval (ms)
+                </label>
+                <input
+                  type="number"
+                  value={test.interval}
+                  onChange={(e) =>
+                    handleTestChange(test.id, { interval: Number(e.target.value) })
+                  }
+                  className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Test Duration (minutes)
                 </label>
-                <div className="relative rounded-lg shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Clock className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="number"
-                    value={test.duration}
-                    onChange={(e) =>
-                      handleTestChange(test.id, { duration: Number(e.target.value) })
-                    }
-                    className="block w-full h-9 pl-10 pr-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                    min="1"
-                    required
-                  />
-                </div>
+                <input
+                  type="number"
+                  value={test.duration}
+                  onChange={(e) =>
+                    handleTestChange(test.id, { duration: Number(e.target.value) })
+                  }
+                  className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  min="1"
+                  required
+                />
               </div>
 
               <div className="flex items-center justify-between py-1">
@@ -155,16 +172,22 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
                 </span>
                 <Switch
                   checked={test.chainCommands}
-                  onChange={(checked) => handleTestChange(test.id, { chainCommands: checked })}
+                  onChange={(checked) => {
+                    handleTestChange(test.id, { chainCommands: checked });
+                  }}
                   label="Enable command chaining"
+                  type="button" // Prevent form submission
+                  onClick={(e) => e.preventDefault()} // Prevent accidental form submission
                 />
               </div>
 
               <CommandForm
-                commands={test.commands}
-                chainCommands={test.chainCommands}
-                onCommandsChange={(commands) => handleTestChange(test.id, { commands })}
-              />
+  commands={test.commands}
+  chainCommands={test.chainCommands}
+  onCommandsChange={(commands) => handleTestChange(test.id, { commands })}
+  onSubmit={(e: React.FormEvent) => e.preventDefault()} // Prevent accidental form submission
+/>
+
 
               <button
                 type="submit"
@@ -188,4 +211,5 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
       </button>
     </div>
   );
+
 }

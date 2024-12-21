@@ -10,7 +10,7 @@ interface CommandFormProps {
 
 export function CommandForm({ commands, chainCommands, onCommandsChange }: CommandFormProps) {
   const handleAddCommand = () => {
-    onCommandsChange([...commands, { command: '', interval: 1000, waitAfter: 0 }]);
+    onCommandsChange([...commands, { command: '', runOnce: false, waitAfter: 0 }]);
   };
 
   const handleRemoveCommand = (index: number) => {
@@ -56,19 +56,28 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
                 required
               />
             </div>
-            <div>
+            <div className="relative group">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Interval (ms)
+                Run Once
               </label>
-              <input
-                type="number"
-                value={command.interval}
-                onChange={(e) => handleCommandChange(index, 'interval', Number(e.target.value))}
-                className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                min="100"
-                required
-              />
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={command.runOnce}
+                  onChange={(e) =>
+                    handleCommandChange(index, 'runOnce', e.target.checked)
+                  }
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Enable run once</span>
+              </div>
+
+              {/* Tooltip */}
+              <div className="absolute left-0 mt-1 hidden group-hover:block w-64 bg-black text-white text-xs rounded-md p-2 shadow-lg">
+                This option ensures the command runs only once during the test, instead of repeating.
+              </div>
             </div>
+
           </div>
 
           {chainCommands && index < commands.length - 1 && (

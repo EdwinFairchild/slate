@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
+const { te } = require('date-fns/locale');
 let savedSelectedDevice = null;
 
 //=================================================================================
@@ -87,7 +88,7 @@ ipcMain.handle('test-command', async (_, command) => {
 //=================================================================================
 ipcMain.handle('start-test', async (_, testData) => {
   let pythonScriptPath;
-
+  console.log(testData);
   // Determine the Python script path based on packaging
   if (app.isPackaged) {
     pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
