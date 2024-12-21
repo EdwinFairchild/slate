@@ -5,7 +5,7 @@ export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem('theme');
     return (stored as Theme) || 
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      (window.matchMedia('(prefers-color-scheme: light)').matches ? 'dark' : 'light');
   });
 
   useEffect(() => {

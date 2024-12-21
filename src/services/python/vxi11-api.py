@@ -3,6 +3,8 @@ import uuid
 import os
 import json
 import sys
+import time
+import csv
 # Load the shared library
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -106,7 +108,34 @@ def send_scpi_command(device_address, command):
         lxi.lxi_disconnect(device)
 
 
+def handle_test_data(test_data):
+    """
+    Handles the test data, creates a CSV file for logging, and returns a JSON response.
+    """
+    # Generate a unique file name for the CSV log
+    timestamp = int(time.time())
+    # include test data name in the file name
+    test_name = test_data.get("name", "unnamed_test").replace(" ", "_")  
+    file_name = f"{test_name}_{timestamp}.csv"
+    csv_file_path = os.path.join(current_dir, file_name)
 
+    # Write test data to the CSV file
+    try:
+        with open(csv_file_path, mode='w', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(['Key', 'Value'])  # Header row
+            for key, value in test_data.items():
+                csv_writer.writerow([key, value])  # Log each test data key-value pair
+
+        return {
+            "status": "success",
+            "log_file_path": csv_file_path
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 if __name__ == "__main__":
     try:
@@ -134,11 +163,30 @@ if __name__ == "__main__":
             subnet = sys.argv[discover_index]
             devices = scan_lxi_devices(subnet)
             print(json.dumps(devices))  # Output devices as JSON
+        elif "--start-test" in sys.argv:
+            # Handle start-test
+            test_index = sys.argv.index("--start-test") + 1
+
+            if test_index >= len(sys.argv):
+                print(json.dumps({"error": "Missing test data argument for --start-test"}))
+                sys.exit(1)
+
+            # Parse the JSON test data
+            test_data_json = sys.argv[test_index]
+            try:
+                test_data = json.loads(test_data_json)
+                # Process the test data
+                result = handle_test_data(test_data)
+                print(json.dumps(result))  # Return the result as JSON
+            except json.JSONDecodeError as e:
+                print(json.dumps({"error": f"Invalid JSON format: {str(e)}"}))
+                sys.exit(1)
         else:
             # Show usage instructions
             print("Usage:")
             print("  python3 vxi11-api.py --ip <device_ip> --command <command>")
             print("  python3 vxi11-api.py --discover <subnet>")
+            print("  python3 vxi11-api.py --start-test <test_data_json>")
             sys.exit(1)
     except Exception as e:
         print(json.dumps({"error": str(e)}))

@@ -25,7 +25,7 @@ export function Sidebar({
   return (
     <div
       className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
-        isOpen ? 'w-60' : 'w-0'
+        isOpen ? 'w-64' : 'w-0'
       } overflow-hidden`}
     >
       <div className="flex flex-col h-full">

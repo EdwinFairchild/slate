@@ -27,5 +27,8 @@ contextBridge.exposeInMainWorld(
     return ipcRenderer.invoke('test-command', command);
   },
   saveSelectedDevice: (device) => ipcRenderer.invoke('save-selected-device', device),
-},
-);
+  
+  startTest: (testData) => {
+    return ipcRenderer.invoke('start-test', testData);
+  },
+});

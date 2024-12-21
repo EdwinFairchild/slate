@@ -92,7 +92,7 @@ export default function App() {
         />
 
         <div
-          className={`transition-all duration-300 ${isSidebarOpen ? 'ml-60' : 'ml-0'} ${isLogsOpen ? 'mr-60' : 'mr-0'}`}
+          className={`transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'} ${isLogsOpen ? 'mr-64' : 'mr-0'}`}
         >
           <div className="container mx-auto px-4 py-8 h-screen flex flex-col">
             <div className="flex justify-between items-center mb-8">
@@ -130,7 +130,7 @@ export default function App() {
             <div className="flex-1 overflow-hidden">
               {renderActivePage()}
             </div>
-            <div>
+            <div className="mt-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Test Results
               </h2>

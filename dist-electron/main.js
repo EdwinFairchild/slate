@@ -3,6 +3,9 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { exec } = require("child_process");
 let savedSelectedDevice = null;
+function addLog(level, ...args) {
+  console.log(`[${level.toUpperCase()}]`, ...args);
+}
 ipcMain.handle("save-selected-device", (_, device) => {
   savedSelectedDevice = device;
 });
@@ -13,14 +16,14 @@ ipcMain.handle("search-devices", async (_, subnet) => {
   } else {
     pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
   }
-  console.log("Resolved Python script path:", pythonScriptPath);
+  addLog("info", "Resolved Python script path:", pythonScriptPath);
   try {
     const { stdout } = await new Promise((resolve, reject) => {
       exec(
         `python3 ${pythonScriptPath} --discover "${subnet}"`,
         (error, stdout2, stderr) => {
           if (error) {
-            console.error("Error running Python script:", stderr);
+            addLog("error", "Error running Python script:", stderr);
             reject(error);
           } else {
             resolve({ stdout: stdout2 });
@@ -28,10 +31,10 @@ ipcMain.handle("search-devices", async (_, subnet) => {
         }
       );
     });
-    console.log("Raw Python output:", stdout.trim());
+    addLog("info", "Raw Python output:", stdout.trim());
     return JSON.parse(stdout.trim());
   } catch (error) {
-    console.error("Error executing discovery:", error);
+    addLog("error", "Error executing discovery:", error);
     return { error: error.message };
   }
 });
@@ -42,9 +45,9 @@ ipcMain.handle("test-command", async (_, command) => {
   } else {
     pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
   }
-  console.log("Resolved Python script path:", pythonScriptPath);
+  addLog("Resolved Python script path:", pythonScriptPath);
   if (!savedSelectedDevice || !savedSelectedDevice.address) {
-    console.error("No device selected!");
+    addLog("error", "No device selected!");
     return `Error: No device selected`;
   }
   const ip = savedSelectedDevice.address;
@@ -54,7 +57,7 @@ ipcMain.handle("test-command", async (_, command) => {
         `python3 ${pythonScriptPath} --ip "${ip}" --command "${command}"`,
         (error, stdout2, stderr) => {
           if (error) {
-            console.error("Error running Python script:", stderr);
+            addLog("error", "Error running Python script:", stderr);
             reject(error);
           } else {
             resolve({ stdout: stdout2 });
@@ -62,17 +65,52 @@ ipcMain.handle("test-command", async (_, command) => {
         }
       );
     });
-    console.log("Raw Python output:", stdout.trim());
+    addLog("info", "Raw Python output:", stdout.trim());
     return stdout.trim();
   } catch (error) {
-    console.error("Error executing command:", error);
+    addLog("error", "Error executing command:", error);
     return `Error: ${error.message}`;
+  }
+});
+ipcMain.handle("start-test", async (_, testData) => {
+  let pythonScriptPath;
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, "python", "vxi11-api.py");
+  } else {
+    pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
+  }
+  if (!savedSelectedDevice || !savedSelectedDevice.address) {
+    addLog("error", "No device selected!");
+    return { status: "error", message: "No device selected" };
+  }
+  const ip = savedSelectedDevice.address;
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const testDataJSON = JSON.stringify(testData);
+      exec(
+        `python3 ${pythonScriptPath} --ip "${ip}" --start-test '${testDataJSON}'`,
+        (error, stdout, stderr) => {
+          if (error) {
+            addLog("error", "Error running Python script:", stderr);
+            reject(stderr.trim());
+          } else {
+            resolve(stdout.trim());
+          }
+        }
+      );
+    });
+    const parsedResult = JSON.parse(result);
+    addLog("info", `Test initiated successfully. Log file: ${parsedResult.log_file_path}`);
+    return parsedResult;
+  } catch (error) {
+    addLog("error", "Error executing start-test:", error);
+    return { status: "error", message: error };
   }
 });
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 800,
+    width: 1500,
+    height: 1025,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,

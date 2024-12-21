@@ -41,5 +41,33 @@ export const mockTests: TestResult[] = [
       value: 1000 + Math.random() * 20 - 10,
       unit: 'Hz'
     }))
+  },
+  {
+    id: '4',
+    name: 'Oscilloscope Frequency Test',
+    status: 'failed',
+    startTime: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+    endTime: new Date(Date.now() - 7000000).toISOString(),
+    command: 'MEAS:FREQ?',
+    interval: 60000,
+    measurements: Array.from({ length: 20 }, (_, i) => ({
+      timestamp: new Date(Date.now() - 7200000 + i * 60000).toISOString(),
+      value: 1000 + Math.random() * 20 - 10,
+      unit: 'Hz'
+    }))
+  },
+  {
+    id: '5',
+    name: 'Oscilloscope Frequency Test',
+    status: 'failed',
+    startTime: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+    endTime: new Date(Date.now() - 7000000).toISOString(),
+    command: 'MEAS:FREQ?',
+    interval: 60000,
+    measurements: Array.from({ length: 20 }, (_, i) => ({
+      timestamp: new Date(Date.now() - 7200000 + i * 60000).toISOString(),
+      value: 1000 + Math.random() * 20 - 10,
+      unit: 'Hz'
+    }))
   }
 ];

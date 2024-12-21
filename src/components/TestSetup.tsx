@@ -3,6 +3,7 @@ import { Plus, ChevronUp, ChevronDown, Clock, Play, Trash2 } from 'lucide-react'
 import { Switch } from './ui/Switch';
 import { CommandForm } from './CommandForm';
 import type { Command } from '../types/test';
+import { useDevice } from '../components/DeviceContext';
 
 interface Test {
   id: string;
@@ -18,6 +19,7 @@ interface TestSetupProps {
 }
 
 export function TestSetup({ onStartTest }: TestSetupProps) {
+  const {  addLog } = useDevice();
   const [tests, setTests] = useState<Test[]>([{
     id: crypto.randomUUID(),
     name: '',
@@ -54,10 +56,24 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
     ));
   };
 
-  const handleSubmit = (test: Test) => (e: React.FormEvent) => {
-    e.preventDefault();
-    const { id, isExpanded, ...testData } = test;
-    onStartTest(testData);
+  const handleSubmit = (test: Test) => async (e: React.FormEvent) => {
+    try {
+      e.preventDefault();
+  
+      const { id, isExpanded, ...testData } = test;
+      const result = await window.api.startTest(testData);
+  
+      // Ensure result is a string before calling .includes
+      if (typeof result === 'string' && result.includes('Error')) {
+        addLog('error', result);
+        return;
+      }
+  
+      addLog('info', `Test: ${result}`);
+    } catch (error) {
+      // Handle unexpected errors
+      addLog('error', `Unexpected error: ${error}`);
+    }
   };
 
   return (
