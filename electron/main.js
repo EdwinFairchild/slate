@@ -119,30 +119,27 @@ ipcMain.handle('start-test', async (_, testData) => {
 
     // Generate a unique test ID
     const testId = crypto.randomUUID();
-
-    // Add the process to the ongoing tests map
-    ongoingTests.set(testId, childProcess);
-
-    let initialResponse = null;
+    let currentTestId = null; // Variable to store the test_id after parsing
 
     const resultPromise = new Promise((resolve, reject) => {
       childProcess.stdout.on('data', (data) => {
         console.log('Raw logs from Python:', data.toString().trim());
         try {
           const parsedData = JSON.parse(data.toString().trim());
-          if (parsedData.status === 'running' && !initialResponse) {
-            initialResponse = {
-              id: parsedData.test_id || testId,
+          if (parsedData.status === 'running' && !currentTestId) {
+            currentTestId = parsedData.test_id || testId; // Store the test_id
+            ongoingTests.set(currentTestId, childProcess);
+
+            // Resolve immediately with the initial response
+            resolve({
+              id: currentTestId,
               name: testData.name,
               duration: testData.duration,
               startTime,
               endTime: null, // Will be updated later
               status: 'running',
               logFilePath: parsedData.log_file_path,
-            };
-
-            // Resolve immediately with the initial response
-            resolve(initialResponse);
+            });
 
             addLog('info', `Test started successfully. Log file: ${parsedData.log_file_path}`);
           }
@@ -157,12 +154,14 @@ ipcMain.handle('start-test', async (_, testData) => {
       });
 
       childProcess.on('close', (code) => {
-        if (code !== 0 && !initialResponse) {
+        if (code !== 0 && !currentTestId) {
           reject(new Error(`Python script exited with code ${code}`));
         }
 
-        // Remove the process from the ongoing tests map
-        ongoingTests.delete(testId);
+        if (currentTestId) {
+          ongoingTests.delete(currentTestId); // Use the stored test_id to clean up
+          console.log(`Test ${currentTestId} has been removed from ongoingTests.`);
+        }
       });
     });
 
@@ -173,9 +172,21 @@ ipcMain.handle('start-test', async (_, testData) => {
     return { status: 'error', message: error.message || 'Unknown error' };
   }
 });
+//=================================================================================
+ipcMain.handle('stop-test', async (_, testId) => {
+  if (!ongoingTests.has(testId)) {
+    return {
+      status: 'error',
+      message: `Test with ID ${testId} not found. Available tests: ${Array.from(ongoingTests.keys()).join(', ')}`,
+    };
+  }
 
+  const childProcess = ongoingTests.get(testId);
+  childProcess.kill();
+  ongoingTests.delete(testId);
 
-
+  return { status: 'success', message: `Test ${testId} stopped.` };
+});
 //=================================================================================
 function createWindow() {
   const mainWindow = new BrowserWindow({

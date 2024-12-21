@@ -4,7 +4,9 @@ import { Sidebar } from './components/Sidebar';
 import { DeviceStatus } from './components/DeviceStatus';
 // import { LogDisplay } from './components/LogDisplay';
 import { SideLogs } from './components/SideLogs';
-import { DeviceProvider } from './components/DeviceContext';
+
+import { useDevice } from './components/DeviceContext';
+
 import { TestsPage } from './pages/TestsPage';
 import { TempPage } from './pages/TempPage';
 import { MockInstrument } from './services/mockInstrument';
@@ -22,6 +24,7 @@ export default function App() {
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [tests, setTests] = useState<TestResult[]>([]); // Start with no tests
+  const {  addLog } = useDevice();
 
   const [logs, setLogs] = useState<LogMessage[]>([]);
 
@@ -58,19 +61,36 @@ const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTi
     throw error; // Re-throw to be caught by `handleSubmit`
   }
 };
+const stopTestInState = (testId: string) => {
+  setTests((prevTests) =>
+    prevTests.map((test) =>
+      test.id === testId ? { ...test, status: 'stopped', endTime: new Date().toISOString() } : test
+    )
+  );
+};
 
 
-  const handleStopTest = (testId: string) => {
-    console.log(`Stopping test with ID: ${testId}`);
-    setTests((prevTests) =>
-      prevTests.map((test) =>
-        test.id === testId ? { ...test, status: 'stopped' } : test
-      )
-    );
-  };
+
+const handleStopTest = async (testId: string) => {
+  try {
+    const response = await window.api.stopTest(testId); // Using the IPC API
+
+    if (response.status === 'success') {
+      addLog('info',`Test ${testId} stopped successfully.`);
+      stopTestInState(testId); // Update the state to reflect the stopped test
+    } else {
+      addLog('error',`Failed to stop test ${testId}: ${response.message}`);
+    }
+  } catch (error) {
+    addLog('error',`Error stopping test ${testId}:${error}`);
+  }
+};
+
+
+
 
   const handleRerunTest = (testId: string) => {
-    console.log(`Rerunning test with ID: ${testId}`);
+    addLog('info',`Rerunning test with ID: ${testId}`);
     // Logic for rerunning a test can be added later
   };
 
@@ -89,14 +109,14 @@ const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTi
 
 
 
-  const addLog = (type: 'info' | 'error', message: string) => {
-    setLogs(prev => [...prev, {
-      id: crypto.randomUUID(),
-      type,
-      message,
-      timestamp: new Date().toISOString()
-    }]);
-  };
+  // const addLog = (type: 'info' | 'error', message: string) => {
+  //   setLogs(prev => [...prev, {
+  //     id: crypto.randomUUID(),
+  //     type,
+  //     message,
+  //     timestamp: new Date().toISOString()
+  //   }]);
+  // };
 
 
 
@@ -112,7 +132,7 @@ const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTi
   };
 
   return (
-    <DeviceProvider>
+   
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
         <Sidebar
           isOpen={isSidebarOpen}
@@ -177,6 +197,6 @@ const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTi
 
         <SideLogs isOpen={isLogsOpen} onToggle={() => setIsLogsOpen(!isLogsOpen)} />
       </div>
-    </DeviceProvider>
+    
   );
 }

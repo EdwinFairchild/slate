@@ -31,4 +31,5 @@ contextBridge.exposeInMainWorld(
   startTest: (testData) => {
     return ipcRenderer.invoke('start-test', testData);
   },
+  stopTest: (testId) => ipcRenderer.invoke('stop-test', testId), 
 });

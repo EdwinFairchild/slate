@@ -97,16 +97,17 @@ ipcMain.handle("start-test", async (_, testData) => {
       JSON.stringify(testData)
     ]);
     const testId = crypto.randomUUID();
-    ongoingTests.set(testId, childProcess);
-    let initialResponse = null;
+    let currentTestId = null;
     const resultPromise = new Promise((resolve, reject) => {
       childProcess.stdout.on("data", (data) => {
         console.log("Raw logs from Python:", data.toString().trim());
         try {
           const parsedData = JSON.parse(data.toString().trim());
-          if (parsedData.status === "running" && !initialResponse) {
-            initialResponse = {
-              id: parsedData.test_id || testId,
+          if (parsedData.status === "running" && !currentTestId) {
+            currentTestId = parsedData.test_id || testId;
+            ongoingTests.set(currentTestId, childProcess);
+            resolve({
+              id: currentTestId,
               name: testData.name,
               duration: testData.duration,
               startTime,
@@ -114,8 +115,7 @@ ipcMain.handle("start-test", async (_, testData) => {
               // Will be updated later
               status: "running",
               logFilePath: parsedData.log_file_path
-            };
-            resolve(initialResponse);
+            });
             addLog("info", `Test started successfully. Log file: ${parsedData.log_file_path}`);
           }
         } catch (err) {
@@ -127,10 +127,13 @@ ipcMain.handle("start-test", async (_, testData) => {
         reject(stderr.toString().trim());
       });
       childProcess.on("close", (code) => {
-        if (code !== 0 && !initialResponse) {
+        if (code !== 0 && !currentTestId) {
           reject(new Error(`Python script exited with code ${code}`));
         }
-        ongoingTests.delete(testId);
+        if (currentTestId) {
+          ongoingTests.delete(currentTestId);
+          console.log(`Test ${currentTestId} has been removed from ongoingTests.`);
+        }
       });
     });
     const initialResult = await resultPromise;
@@ -139,6 +142,18 @@ ipcMain.handle("start-test", async (_, testData) => {
     addLog("error", "Error executing start-test:", error);
     return { status: "error", message: error.message || "Unknown error" };
   }
+});
+ipcMain.handle("stop-test", async (_, testId) => {
+  if (!ongoingTests.has(testId)) {
+    return {
+      status: "error",
+      message: `Test with ID ${testId} not found. Available tests: ${Array.from(ongoingTests.keys()).join(", ")}`
+    };
+  }
+  const childProcess = ongoingTests.get(testId);
+  childProcess.kill();
+  ongoingTests.delete(testId);
+  return { status: "success", message: `Test ${testId} stopped.` };
 });
 function createWindow() {
   const mainWindow = new BrowserWindow({

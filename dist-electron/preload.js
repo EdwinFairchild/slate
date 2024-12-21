@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld(
     saveSelectedDevice: (device) => ipcRenderer.invoke("save-selected-device", device),
     startTest: (testData) => {
       return ipcRenderer.invoke("start-test", testData);
-    }
+    },
+    stopTest: (testId) => ipcRenderer.invoke("stop-test", testId)
   }
 );
