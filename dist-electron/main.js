@@ -2,6 +2,8 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { exec } = require("child_process");
+const { spawn } = require("child_process");
+const ongoingTests = /* @__PURE__ */ new Map();
 require("date-fns/locale");
 let savedSelectedDevice = null;
 function addLog(level, ...args) {
@@ -75,7 +77,6 @@ ipcMain.handle("test-command", async (_, command) => {
 });
 ipcMain.handle("start-test", async (_, testData) => {
   let pythonScriptPath;
-  console.log(testData);
   if (app.isPackaged) {
     pythonScriptPath = path.join(process.resourcesPath, "python", "vxi11-api.py");
   } else {
@@ -88,36 +89,55 @@ ipcMain.handle("start-test", async (_, testData) => {
   const ip = savedSelectedDevice.address;
   try {
     const startTime = (/* @__PURE__ */ new Date()).toISOString();
-    const result = await new Promise((resolve, reject) => {
-      const testDataJSON = JSON.stringify(testData);
-      exec(
-        `python3 ${pythonScriptPath} --ip "${ip}" --start-test '${testDataJSON}'`,
-        (error, stdout, stderr) => {
-          if (error) {
-            addLog("error", "Error running Python script:", stderr);
-            reject(stderr.trim());
-          } else {
-            resolve(stdout.trim());
+    const childProcess = spawn("python3", [
+      pythonScriptPath,
+      "--ip",
+      ip,
+      "--start-test",
+      JSON.stringify(testData)
+    ]);
+    const testId = crypto.randomUUID();
+    ongoingTests.set(testId, childProcess);
+    let initialResponse = null;
+    const resultPromise = new Promise((resolve, reject) => {
+      childProcess.stdout.on("data", (data) => {
+        console.log("Raw logs from Python:", data.toString().trim());
+        try {
+          const parsedData = JSON.parse(data.toString().trim());
+          if (parsedData.status === "running" && !initialResponse) {
+            initialResponse = {
+              id: parsedData.test_id || testId,
+              name: testData.name,
+              duration: testData.duration,
+              startTime,
+              endTime: null,
+              // Will be updated later
+              status: "running",
+              logFilePath: parsedData.log_file_path
+            };
+            resolve(initialResponse);
+            addLog("info", `Test started successfully. Log file: ${parsedData.log_file_path}`);
           }
+        } catch (err) {
+          console.error("Error parsing Python response:", err.message);
         }
-      );
+      });
+      childProcess.stderr.on("data", (stderr) => {
+        console.error("Error from Python:", stderr.toString().trim());
+        reject(stderr.toString().trim());
+      });
+      childProcess.on("close", (code) => {
+        if (code !== 0 && !initialResponse) {
+          reject(new Error(`Python script exited with code ${code}`));
+        }
+        ongoingTests.delete(testId);
+      });
     });
-    const parsedResult = JSON.parse(result);
-    addLog("info", `Test initiated successfully. Log file: ${parsedResult.log_file_path}`);
-    return {
-      id: crypto.randomUUID(),
-      name: testData.name,
-      duration: testData.duration,
-      startTime,
-      endTime: null,
-      // Will be updated when the test ends
-      status: "running",
-      // Initial status
-      logFilePath: parsedResult.log_file_path
-    };
+    const initialResult = await resultPromise;
+    return initialResult;
   } catch (error) {
     addLog("error", "Error executing start-test:", error);
-    return { status: "error", message: error };
+    return { status: "error", message: error.message || "Unknown error" };
   }
 });
 function createWindow() {
@@ -153,4 +173,10 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+app.on("before-quit", () => {
+  ongoingTests.forEach((childProcess, testId) => {
+    console.log(`Terminating test: ${testId}`);
+    childProcess.kill();
+  });
 });

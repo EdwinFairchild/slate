@@ -76,9 +76,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   const handleSubmit = (test: Test) => async (e: React.FormEvent) => {
     e.preventDefault();
     e.preventDefault();
-    console.log("Form submitted by:", e.nativeEvent?.submitter); // Log submitter info
-    console.log("Test data:", test); // Log test details
-    console.trace("Call stack:"); // Log call stack
+    
     const { id, isExpanded, ...testData } = test; // Exclude local properties
     try {
       await onStartTest(testData); // Call the parent handler to start the test
@@ -182,11 +180,11 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
               </div>
 
               <CommandForm
-  commands={test.commands}
-  chainCommands={test.chainCommands}
-  onCommandsChange={(commands) => handleTestChange(test.id, { commands })}
-  onSubmit={(e: React.FormEvent) => e.preventDefault()} // Prevent accidental form submission
-/>
+                commands={test.commands}
+                chainCommands={test.chainCommands}
+                onCommandsChange={(commands) => handleTestChange(test.id, { commands })}
+                onSubmit={(e: React.FormEvent) => e.preventDefault()} // Prevent accidental form submission
+              />
 
 
               <button

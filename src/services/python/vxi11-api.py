@@ -116,6 +116,10 @@ def handle_test_data(test_data, device_ip):
     """
     Handles the test data, executes commands, creates a CSV log, and returns a JSON response.
     """
+    # Generate a unique test ID (if needed)
+    test_id = f"{str(uuid.uuid4())[:8]}"
+
+    sys.stdout.flush()  # Ensure the output is sent to the Electron app
     timestamp = int(time.time())
     test_name = test_data.get("name", "unnamed_test").replace(" ", "_")
     duration = test_data.get("duration", 0) * 60  # Convert duration from minutes to seconds
@@ -123,9 +127,17 @@ def handle_test_data(test_data, device_ip):
     commands = test_data.get("commands", [])
     
     # Generate a unique CSV file for logging
-    file_name = f"{test_name}_{timestamp}.csv"
+    file_name = f"{test_name}_{test_id}.csv"
     csv_file_path = os.path.join(current_dir, file_name)
 
+    # Immediately send a response indicating that the test has started
+    test_statusu = {
+            "status": "running",
+            "test_id": test_id,
+            "log_file_path": str(csv_file_path)
+        }
+    print(json.dumps(test_statusu)) 
+    sys.stdout.flush()  # Ensure the output is sent to the Electron app
     try:
         with open(csv_file_path, mode='w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)

@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
+const { spawn } = require('child_process');
+// Map to track ongoing tests
+const ongoingTests = new Map();
 const { te } = require('date-fns/locale');
 let savedSelectedDevice = null;
 
@@ -88,15 +91,13 @@ ipcMain.handle('test-command', async (_, command) => {
 //=================================================================================
 ipcMain.handle('start-test', async (_, testData) => {
   let pythonScriptPath;
-  console.log(testData);
-  // Determine the Python script path based on packaging
+
   if (app.isPackaged) {
     pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
   } else {
     pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
   }
 
-  // Check if a device is selected
   if (!savedSelectedDevice || !savedSelectedDevice.address) {
     addLog('error', 'No device selected!');
     return { status: 'error', message: 'No device selected' };
@@ -106,40 +107,73 @@ ipcMain.handle('start-test', async (_, testData) => {
 
   try {
     const startTime = new Date().toISOString();
-    // Execute the Python script with test data as JSON
-    const result = await new Promise((resolve, reject) => {
-      const testDataJSON = JSON.stringify(testData);
-      exec(
-        `python3 ${pythonScriptPath} --ip "${ip}" --start-test '${testDataJSON}'`,
-        (error, stdout, stderr) => {
-          if (error) {
-            addLog('error', 'Error running Python script:', stderr);
-            reject(stderr.trim());
-          } else {
-            resolve(stdout.trim());
+
+    // Spawn the Python process
+    const childProcess = spawn('python3', [
+      pythonScriptPath,
+      '--ip',
+      ip,
+      '--start-test',
+      JSON.stringify(testData),
+    ]);
+
+    // Generate a unique test ID
+    const testId = crypto.randomUUID();
+
+    // Add the process to the ongoing tests map
+    ongoingTests.set(testId, childProcess);
+
+    let initialResponse = null;
+
+    const resultPromise = new Promise((resolve, reject) => {
+      childProcess.stdout.on('data', (data) => {
+        console.log('Raw logs from Python:', data.toString().trim());
+        try {
+          const parsedData = JSON.parse(data.toString().trim());
+          if (parsedData.status === 'running' && !initialResponse) {
+            initialResponse = {
+              id: parsedData.test_id || testId,
+              name: testData.name,
+              duration: testData.duration,
+              startTime,
+              endTime: null, // Will be updated later
+              status: 'running',
+              logFilePath: parsedData.log_file_path,
+            };
+
+            // Resolve immediately with the initial response
+            resolve(initialResponse);
+
+            addLog('info', `Test started successfully. Log file: ${parsedData.log_file_path}`);
           }
+        } catch (err) {
+          console.error('Error parsing Python response:', err.message);
         }
-      );
+      });
+
+      childProcess.stderr.on('data', (stderr) => {
+        console.error('Error from Python:', stderr.toString().trim());
+        reject(stderr.toString().trim());
+      });
+
+      childProcess.on('close', (code) => {
+        if (code !== 0 && !initialResponse) {
+          reject(new Error(`Python script exited with code ${code}`));
+        }
+
+        // Remove the process from the ongoing tests map
+        ongoingTests.delete(testId);
+      });
     });
 
-    // Parse Python output as JSON
-    const parsedResult = JSON.parse(result);
-    addLog('info', `Test initiated successfully. Log file: ${parsedResult.log_file_path}`);
-    // Return a complete test result object for the table
-    return {
-      id: crypto.randomUUID(),
-      name: testData.name,
-      duration: testData.duration,
-      startTime,
-      endTime: null, // Will be updated when the test ends
-      status: 'running', // Initial status
-      logFilePath: parsedResult.log_file_path,
-    };
+    const initialResult = await resultPromise;
+    return initialResult;
   } catch (error) {
     addLog('error', 'Error executing start-test:', error);
-    return { status: 'error', message: error };
+    return { status: 'error', message: error.message || 'Unknown error' };
   }
 });
+
 
 
 //=================================================================================
@@ -180,4 +214,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+//=================================================================================
+app.on('before-quit', () => {
+  ongoingTests.forEach((childProcess, testId) => {
+    console.log(`Terminating test: ${testId}`);
+    childProcess.kill(); // Gracefully terminate the process
+  });
 });
