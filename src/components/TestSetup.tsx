@@ -78,7 +78,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
       await onStartTest(testData); // Call the parent handler to start the test
       addLog('info', `Test "${testData.name}" started.`);
     } catch (error) {
-      addLog('error', `Failed to start test: ${error}`);
+      addLog('error', `Failed to start test: ${error.message || error}`);
     }
   };
 

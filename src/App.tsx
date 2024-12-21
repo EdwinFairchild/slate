@@ -24,36 +24,41 @@ export default function App() {
   const [tests, setTests] = useState<TestResult[]>([]); // Start with no tests
 
   const [logs, setLogs] = useState<LogMessage[]>([]);
+
   const [activePage, setActivePage] = useState<Page>('tests');
 
   const instrument = MockInstrument.getInstance();
-  const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTime' | 'endTime' | 'logFilePath'>) => {
-    try {
-      const result = await window.api.startTest(test);
+const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTime' | 'endTime' | 'logFilePath'>) => {
+  try {
+    const result = await window.api.startTest(test);
 
-      if (result.status === 'error') {
-        console.error(`Test failed: ${result.message}`);
-      } else {
-        console.log(`Test started successfully. Log file: ${result.logFilePath}`);
-
-        // Add the new test to the centralized state
-        setTests((prevTests) => [
-          ...prevTests,
-          {
-            id: result.id,
-            name: result.name,
-            duration: result.duration,
-            startTime: result.startTime,
-            endTime: result.endTime,
-            status: result.status,
-            logFilePath: result.logFilePath,
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error(`Unexpected error: ${error}`);
+    if (result.status === 'error') {
+      // Log the error and throw it so `handleSubmit` can handle it
+      console.error(`Test failed: ${result.message}`);
+      throw new Error(result.message);
     }
-  };
+
+    console.log(`Test started successfully. Log file: ${result.logFilePath}`);
+
+    // Add the new test to the centralized state
+    setTests((prevTests) => [
+      ...prevTests,
+      {
+        id: result.id,
+        name: result.name,
+        duration: result.duration,
+        startTime: result.startTime,
+        endTime: result.endTime,
+        status: result.status,
+        logFilePath: result.logFilePath,
+      },
+    ]);
+  } catch (error) {
+    console.error(`Unexpected error: ${error}`);
+    throw error; // Re-throw to be caught by `handleSubmit`
+  }
+};
+
 
   const handleStopTest = (testId: string) => {
     console.log(`Stopping test with ID: ${testId}`);
