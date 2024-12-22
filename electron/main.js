@@ -1,12 +1,68 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain , dialog} = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
+const Store = require('electron-store');
+const store = new Store();
+const fs = require('fs');
 // Map to track ongoing tests
 const ongoingTests = new Map();
 const { te } = require('date-fns/locale');
 let savedSelectedDevice = null;
+let saveDirectory = null;
+// Keep this in memory as the “cached” list, loaded on app start.
+let allTests = [];
 
+//=================================================================================
+ipcMain.handle('get-tests', () => {
+  console.log('main.js got test from store:', store.get('tests', []));
+  return store.get('tests', []); // default to empty array
+});
+
+ipcMain.handle('save-tests', (_, tests) => {
+  store.set('tests', tests);
+  console.log('main.js  Saved tests:', tests);
+  return { success: true };
+});
+//=================================================================================
+function loadTestsFromFile() {
+  const filePath = getTestsFilePath();
+  if (!fs.existsSync(filePath)) {
+    return []; // No file yet, return an empty array
+  }
+  try {
+    const data = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('Failed to parse tests file:', err);
+    return [];
+  }
+}
+//=================================================================================
+function saveTestsToFile(tests) {
+  const filePath = getTestsFilePath();
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(tests, null, 2));
+  } catch (err) {
+    console.error('Failed to save tests file:', err);
+  }
+}
+
+function getTestsFilePath() {
+  // e.g. /Users/YourName/Library/Application Support/YourApp/slate-tests.json
+  return path.join(app.getPath('userData'), 'slate-tests.json');
+}
+//=================================================================================
+ipcMain.handle('selectDirectory', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+  });
+  if (canceled || filePaths.length === 0) {
+    return null;
+  }
+  saveDirectory = filePaths[0];
+  return filePaths[0];
+});
 //=================================================================================
 function addLog(level, ...args) {
   console.log(`[${level.toUpperCase()}]`, ...args);

@@ -1,11 +1,33 @@
 "use strict";
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const { exec } = require("child_process");
 const { spawn } = require("child_process");
+const Store = require("electron-store");
+const store = new Store();
+require("fs");
 const ongoingTests = /* @__PURE__ */ new Map();
 require("date-fns/locale");
 let savedSelectedDevice = null;
+ipcMain.handle("get-tests", () => {
+  console.log("main.js got test from store:", store.get("tests", []));
+  return store.get("tests", []);
+});
+ipcMain.handle("save-tests", (_, tests) => {
+  store.set("tests", tests);
+  console.log("main.js  Saved tests:", tests);
+  return { success: true };
+});
+ipcMain.handle("selectDirectory", async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ["openDirectory"]
+  });
+  if (canceled || filePaths.length === 0) {
+    return null;
+  }
+  filePaths[0];
+  return filePaths[0];
+});
 function addLog(level, ...args) {
   console.log(`[${level.toUpperCase()}]`, ...args);
 }

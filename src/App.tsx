@@ -31,6 +31,8 @@ export default function App() {
   const [activePage, setActivePage] = useState<Page>('tests');
 
   const instrument = MockInstrument.getInstance();
+
+  
 const handleStartTest = async (test: Omit<TestResult, 'id' | 'status' | 'startTime' | 'endTime' | 'logFilePath'>) => {
   try {
     const result = await window.api.startTest(test);

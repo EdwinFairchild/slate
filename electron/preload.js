@@ -27,9 +27,12 @@ contextBridge.exposeInMainWorld(
     return ipcRenderer.invoke('test-command', command);
   },
   saveSelectedDevice: (device) => ipcRenderer.invoke('save-selected-device', device),
-  
+
   startTest: (testData) => {
     return ipcRenderer.invoke('start-test', testData);
   },
-  stopTest: (testId) => ipcRenderer.invoke('stop-test', testId), 
+  stopTest: (testId) => ipcRenderer.invoke('stop-test', testId),
+  selectDirectory: () => ipcRenderer.invoke('selectDirectory'),
+  getTests: () => ipcRenderer.invoke('get-tests'),
+  saveTests: (tests) => ipcRenderer.invoke('save-tests', tests),
 });

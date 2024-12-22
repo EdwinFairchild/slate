@@ -1,7 +1,20 @@
-import React from 'react';
-import { Search, Loader2, RefreshCw, Activity, Settings } from 'lucide-react';
-import { useDevice } from '../components/DeviceContext';
-import type { Device } from '../types';
+import React, { useState } from 'react';
+import { useDevice } from './DeviceContext';
+import {
+  Activity,
+  Settings,
+  RefreshCw,
+  Loader2,
+  Search,
+  Github
+} from 'lucide-react';
+
+interface Device {
+  id: string;
+  name: string;
+  address: string;
+  isConnected: boolean;
+}
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,6 +23,8 @@ interface SidebarProps {
   activePage: string;
   onSearchDevices: () => void;
   onNavigate: (page: string) => void;
+  setSelectedDevice: (device: Device) => void;
+  selectedDevice: Device | null;
 }
 
 export function Sidebar({
@@ -18,9 +33,24 @@ export function Sidebar({
   isSearching,
   activePage,
   onSearchDevices,
-  onNavigate
+  onNavigate,
+  setSelectedDevice,
+  selectedDevice,
 }: SidebarProps) {
-  const { selectedDevice, setSelectedDevice } = useDevice();
+  // If you keep this state in your Sidebar, define it here:
+  const [saveDirectory, setSaveDirectory] = useState<string | null>(null);
+  const {  addLog } = useDevice(); 
+
+  const handleSelectDirectory = async () => {
+    try {
+      const directory = await window.api.selectDirectory();
+      setSaveDirectory(directory);
+      console.log('Selected directory:', directory);
+      addLog('info', `Selected directory: ${directory}`);
+    } catch (error) {
+      addLog('error','Error selecting directory:', error);
+    }
+  };
 
   return (
     <div
@@ -29,8 +59,12 @@ export function Sidebar({
       } overflow-hidden`}
     >
       <div className="flex flex-col h-full">
+
+        {/* Top Section */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Navigation</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Navigation
+          </h2>
           <nav className="space-y-2">
             <button
               onClick={() => onNavigate('tests')}
@@ -57,9 +91,12 @@ export function Sidebar({
           </nav>
         </div>
 
+        {/* Middle Section: Devices */}
         <div className="flex-1 p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Devices</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Devices
+            </h2>
             <button
               onClick={onSearchDevices}
               disabled={isSearching}
@@ -72,7 +109,7 @@ export function Sidebar({
               )}
             </button>
           </div>
-          
+
           <div className="relative mb-4">
             <input
               type="text"
@@ -83,12 +120,12 @@ export function Sidebar({
           </div>
 
           <div className="space-y-2">
-            {devices.map(device => (
+            {devices.map((device) => (
               <button
                 key={device.id}
                 onClick={() => {
-                  setSelectedDevice(device); // Update the context
-                  window.api.saveSelectedDevice(device); // Call the exposed API to save globally
+                  setSelectedDevice(device);
+                  window.api.saveSelectedDevice(device); // If needed
                 }}
                 className={`w-full p-3 rounded-lg text-left transition-colors ${
                   selectedDevice?.id === device.id
@@ -98,8 +135,12 @@ export function Sidebar({
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{device.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{device.address}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {device.name}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {device.address}
+                    </p>
                   </div>
                   <span
                     className={`h-2 w-2 rounded-full ${
@@ -112,6 +153,26 @@ export function Sidebar({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={handleSelectDirectory}
+            className="p-2 mb-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 disabled:opacity-50 w-full"
+          >
+            Select Save Directory
+          </button>
+
+          <a
+            href="https://github.com/your-dummy-repo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+          >
+            <Github className="h-5 w-5" />
+            <span>View on GitHub</span>
+          </a>
         </div>
       </div>
     </div>

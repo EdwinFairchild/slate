@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, ChevronUp, ChevronDown, Clock, Play, Trash2 } from 'lucide-react';
 import { Switch } from './ui/Switch';
 import { CommandForm } from './CommandForm';
@@ -20,20 +20,31 @@ interface TestSetupProps {
 }
 
 export function TestSetup({ onStartTest }: TestSetupProps) {
+  const [tests, setTests] = useState<Test[]>([]);
   const { addLog } = useDevice();
+  const hasLoadedRef = React.useRef(false);
+  const oldTestsRef = useRef<Test[]>([]); 
+  // 1. Load tests on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const loaded = await window.api.getTests();
+        setTests(loaded);
+        hasLoadedRef.current = true; // Mark that we've done our initial load
+      } catch (err) {
+        addLog('error', 'Error loading tests from file:', err);
+      }
+    })();
+  }, []);
 
-  // State for the list of tests
-  const [tests, setTests] = useState<Test[]>([
-    {
-      id: crypto.randomUUID(),
-      name: '',
-      duration: 60,
-      interval: 1000,
-      chainCommands: false,
-      commands: [{ command: '', runOnce: false, waitAfter: 0 }],
-      isExpanded: true,
-    },
-  ]);
+  // 2. Only auto-save AFTER the first load
+  useEffect(() => {
+    // Compare the new tests array with an old ref before saving
+    if (JSON.stringify(tests) !== JSON.stringify(oldTestsRef.current)) {
+      window.api.saveTests(tests);
+      oldTestsRef.current = tests;
+    }
+  }, [tests]);
 
   // Add a new test template
   const handleAddTest = () => {
