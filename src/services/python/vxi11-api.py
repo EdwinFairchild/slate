@@ -112,7 +112,7 @@ def send_scpi_command(device_address, command):
         lxi.lxi_disconnect(device)
 
 
-def handle_test_data(test_data, device_ip):
+def handle_test_data(test_data, device_ip,output_dir):
     """
     Handles the test data, executes commands, creates a CSV log, and returns a JSON response.
     """
@@ -128,7 +128,7 @@ def handle_test_data(test_data, device_ip):
     
     # Generate a unique CSV file for logging
     file_name = f"{test_name}_{test_id}.csv"
-    csv_file_path = os.path.join(current_dir, file_name)
+    csv_file_path = os.path.join(output_dir, file_name)
 
     # Immediately send a response indicating that the test has started
     test_statusu = {
@@ -256,20 +256,23 @@ if __name__ == "__main__":
         elif "--start-test" in sys.argv:
             test_index = sys.argv.index("--start-test") + 1
             ip_index = sys.argv.index("--ip") + 1
+            savedir_index = sys.argv.index("--savedir") + 1
 
-            if test_index >= len(sys.argv) or ip_index >= len(sys.argv):
-                print(json.dumps({"error": "Missing test data or device IP argument"}))
+            if test_index >= len(sys.argv) or ip_index >= len(sys.argv) or savedir_index >= len(sys.argv):
+                print(json.dumps({"error": "Missing test data, device IP, or save directory argument"}))
                 sys.exit(1)
 
             test_data_json = sys.argv[test_index]
             device_ip = sys.argv[ip_index]
+            output_dir = sys.argv[savedir_index]
             try:
                 test_data = json.loads(test_data_json)
-                result = handle_test_data(test_data, device_ip)
+                result = handle_test_data(test_data, device_ip, output_dir)
                 print(json.dumps(result))  # Return the result as JSON
             except json.JSONDecodeError as e:
                 print(json.dumps({"error": f"Invalid JSON format: {str(e)}"}))
                 sys.exit(1)
+       
         else:
             # Show usage instructions
             print("Usage:")

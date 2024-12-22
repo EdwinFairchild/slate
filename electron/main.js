@@ -16,28 +16,18 @@ let allTests = [];
 //=================================================================================
 ipcMain.handle('get-tests', () => {
   console.log('main.js got test from store:', store.get('tests', []));
+  // get the savedirectory
+  saveDirectory = store.get('saveDirectory', null);
   return store.get('tests', []); // default to empty array
 });
 
 ipcMain.handle('save-tests', (_, tests) => {
   store.set('tests', tests);
+  // save the savedirectory
+  store.set('saveDirectory', saveDirectory);
   console.log('main.js  Saved tests:', tests);
   return { success: true };
 });
-//=================================================================================
-function loadTestsFromFile() {
-  const filePath = getTestsFilePath();
-  if (!fs.existsSync(filePath)) {
-    return []; // No file yet, return an empty array
-  }
-  try {
-    const data = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error('Failed to parse tests file:', err);
-    return [];
-  }
-}
 //=================================================================================
 function saveTestsToFile(tests) {
   const filePath = getTestsFilePath();
@@ -159,6 +149,11 @@ ipcMain.handle('start-test', async (_, testData) => {
     return { status: 'error', message: 'No device selected' };
   }
 
+  if (!saveDirectory) {
+    addLog('error', 'No save directory selected!');
+    return { status: 'error', message: 'No save directory selected' };
+  }
+
   const ip = savedSelectedDevice.address;
 
   try {
@@ -171,6 +166,8 @@ ipcMain.handle('start-test', async (_, testData) => {
       ip,
       '--start-test',
       JSON.stringify(testData),
+      '--savedir',
+      saveDirectory,
     ]);
 
     // Generate a unique test ID
