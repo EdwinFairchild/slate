@@ -23,8 +23,7 @@ interface SidebarProps {
   activePage: string;
   onSearchDevices: () => void;
   onNavigate: (page: string) => void;
-  setSelectedDevice: (device: Device) => void;
-  selectedDevice: Device | null;
+  // Remove selectedDevice & setSelectedDevice from props
 }
 
 export function Sidebar({
@@ -33,19 +32,13 @@ export function Sidebar({
   isSearching,
   activePage,
   onSearchDevices,
-  onNavigate,
-  setSelectedDevice,
-  selectedDevice,
+  onNavigate
 }: SidebarProps) {
-  // If you keep this state in your Sidebar, define it here:
-  const [saveDirectory, setSaveDirectory] = useState<string | null>(null);
-  const {  addLog } = useDevice(); 
+  const { selectedDevice, setSelectedDevice, addLog } = useDevice();
 
   const handleSelectDirectory = async () => {
     try {
       const directory = await window.api.selectDirectory();
-      setSaveDirectory(directory);
-      console.log('Selected directory:', directory);
       addLog('info', `Selected directory: ${directory}`);
     } catch (error) {
       addLog('error','Error selecting directory:', error);
