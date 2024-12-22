@@ -165,12 +165,13 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
                 </label>
                 <input
                   type="number"
+                  step="0.1"
                   value={test.duration}
                   onChange={(e) =>
                     handleTestChange(test.id, { duration: Number(e.target.value) })
                   }
                   className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  min="1"
+                  min="0"
                   required
                 />
               </div>
