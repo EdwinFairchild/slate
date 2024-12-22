@@ -28,7 +28,7 @@ export default function App() {
 
   const instrument = MockInstrument.getInstance();
 
-  // 1. Listen for "test-completed" from main process
+  // Listen for "test-completed" from main process
   useEffect(() => {
     const handleTestCompleted = (_event: any, data: { testId: string }) => {
       // Mark that test as completed
@@ -37,7 +37,7 @@ export default function App() {
           t.id === data.testId
             ? {
                 ...t,
-                status: 'completed', // or 'done'
+                status: 'completed',
                 endTime: new Date().toISOString(),
               }
             : t
@@ -46,22 +46,19 @@ export default function App() {
       addLog('info', `Test ${data.testId} completed naturally.`);
     };
 
-    // Subscribe to the event
     window.api.onTestCompleted(handleTestCompleted);
 
-    // Unsubscribe on unmount to avoid memory leaks
     return () => {
       window.api.offTestCompleted(handleTestCompleted);
     };
   }, [addLog]);
 
-  // 2. Start test
+  // Start test
   const handleStartTest = async (
     test: Omit<TestResult, 'id' | 'status' | 'startTime' | 'endTime' | 'logFilePath'>
   ) => {
     try {
       const result = await window.api.startTest(test);
-
       if (result.status === 'error') {
         console.error(`Test failed: ${result.message}`);
         throw new Error(result.message);
@@ -86,7 +83,7 @@ export default function App() {
     }
   };
 
-  // 3. Stop test in state
+  // Stop a running test in state
   const stopTestInState = (testId: string) => {
     setTests((prevTests) =>
       prevTests.map((test) =>
@@ -97,7 +94,7 @@ export default function App() {
     );
   };
 
-  // 4. Stop test via IPC
+  // Stop test via IPC
   const handleStopTest = async (testId: string) => {
     try {
       const response = await window.api.stopTest(testId);
@@ -112,12 +109,28 @@ export default function App() {
     }
   };
 
-  // 5. Rerun test (optional)
+  // (Optional) Rerun test
   const handleRerunTest = (testId: string) => {
     addLog('info', `Rerunning test with ID: ${testId}`);
-    // Logic for rerunning a test can go here
+    // ...
   };
 
+  // **New**: Remove test from table (and stop it if it’s running)
+  const handleRemoveTest = async (testId: string, status: string) => {
+    // If running, stop the test
+    if (status === 'running') {
+      const response = await window.api.stopTest(testId);
+      if (response.status !== 'success') {
+        addLog('error', `Failed to stop test ${testId}: ${response.message}`);
+        return; 
+      }
+    }
+    // Now remove from state
+    setTests((prevTests) => prevTests.filter((t) => t.id !== testId));
+    addLog('info', `Test ${testId} removed from table.`);
+  };
+
+  // Search devices
   const handleSearchDevices = async () => {
     setIsSearching(true);
     try {
@@ -203,6 +216,8 @@ export default function App() {
               tests={tests}
               onStopTest={handleStopTest}
               onRerunTest={handleRerunTest}
+              // Pass the new callback down
+              onRemoveTest={handleRemoveTest}
             />
           </div>
         </div>

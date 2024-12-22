@@ -1,15 +1,20 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Activity, XCircle, CheckCircle2, PlayCircle, StopCircle } from 'lucide-react';
+import { Activity, XCircle, CheckCircle2, PlayCircle, Trash2 } from 'lucide-react';
 import type { TestResult } from '../types/test';
 
 interface TestResultsTableProps {
   tests: TestResult[];
-  onStopTest: (testId: string) => void;
-  onRerunTest: (testId: string) => void;
+  // Remove if you no longer need these handlers:
+  // onStopTest: (testId: string) => void;
+  // onRerunTest: (testId: string) => void;
+  onRemoveTest: (testId: string, status: string) => void;
 }
 
-export function TestResultsTable({ tests, onStopTest, onRerunTest }: TestResultsTableProps) {
+export function TestResultsTable({
+  tests,
+  onRemoveTest,
+}: TestResultsTableProps) {
   const getStatusIcon = (status: TestResult['status']) => {
     switch (status) {
       case 'running':
@@ -61,7 +66,9 @@ export function TestResultsTable({ tests, onStopTest, onRerunTest }: TestResults
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                     {index + 1}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{getStatusIcon(test.status)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusIcon(test.status)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                     {test.name}
                   </td>
@@ -81,23 +88,17 @@ export function TestResultsTable({ tests, onStopTest, onRerunTest }: TestResults
                       : 'Running...'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 space-x-2">
-                    {test.status === 'running' ? (
-                      <button
-                        onClick={() => onStopTest(test.id)}
-                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-                      >
-                        <StopCircle className="h-4 w-4 mr-1" />
-                        Stop
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => onRerunTest(test.id)}
-                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                      >
-                        <PlayCircle className="h-4 w-4 mr-1" />
-                        Rerun
-                      </button>
-                    )}
+                    {/* Single Remove button */}
+                    <button
+                      onClick={() => onRemoveTest(test.id, test.status)}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm
+                                 leading-4 font-medium rounded-md text-red-700 dark:text-red-400
+                                 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800
+                                 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Remove
+                    </button>
                   </td>
                 </tr>
               ))}
