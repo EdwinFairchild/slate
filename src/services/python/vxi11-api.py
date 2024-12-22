@@ -139,7 +139,7 @@ def handle_test_data(test_data, device_ip,output_dir):
     print(json.dumps(test_statusu)) 
     sys.stdout.flush()  # Ensure the output is sent to the Electron app
     try:
-        with open(csv_file_path, mode='w', newline='') as csv_file:
+        with open(csv_file_path, mode='w', newline='',buffering=1) as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(['Timestamp', 'Command', 'Response', 'Error'])
 
