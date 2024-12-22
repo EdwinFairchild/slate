@@ -1,1 +1,235 @@
-"use strict";const{app:l,BrowserWindow:E,ipcMain:u,dialog:x}=require("electron"),d=require("path"),{exec:S}=require("child_process"),{spawn:$}=require("child_process"),T=require("electron-store"),m=new T;require("fs");const p=new Map;require("date-fns/locale");let h=null,f=null;u.handle("get-tests",()=>(console.log("main.js got test from store:",m.get("tests",[])),f=m.get("saveDirectory",null),m.get("tests",[])));u.handle("save-tests",(t,e)=>(m.set("tests",e),m.set("saveDirectory",f),console.log("main.js  Saved tests:",e),{success:!0}));u.handle("selectDirectory",async()=>{const{canceled:t,filePaths:e}=await x.showOpenDialog({properties:["openDirectory"]});return t||e.length===0?null:(f=e[0],e[0])});function o(t,...e){console.log(`[${t.toUpperCase()}]`,...e)}u.handle("save-selected-device",(t,e)=>{h=e});u.handle("search-devices",async(t,e)=>{let r;l.isPackaged?r=d.join(process.resourcesPath,"python","vxi11-api.py"):r=d.join(__dirname,"../src/services/python/vxi11-api.py"),o("info","Resolved Python script path:",r);try{const{stdout:i}=await new Promise((n,a)=>{S(`python3 ${r} --discover "${e}"`,(g,s,v)=>{g?(o("error","Error running Python script:",v),a(g)):n({stdout:s})})});return o("info","Raw Python output:",i.trim()),JSON.parse(i.trim())}catch(i){return o("error","Error executing discovery:",i),{error:i.message}}});u.handle("test-command",async(t,e)=>{let r;if(l.isPackaged?r=d.join(process.resourcesPath,"python","vxi11-api.py"):r=d.join(__dirname,"../src/services/python/vxi11-api.py"),o("Resolved Python script path:",r),!h||!h.address)return o("error","No device selected!"),"Error: No device selected";const i=h.address;try{const{stdout:n}=await new Promise((a,g)=>{S(`python3 ${r} --ip "${i}" --command "${e}"`,(s,v,w)=>{s?(o("error","Error running Python script:",w),g(s)):a({stdout:v})})});return o("info","Raw Python output:",n.trim()),n.trim()}catch(n){return o("error","Error executing command:",n),`Error: ${n.message}`}});u.handle("start-test",async(t,e)=>{let r;if(l.isPackaged?r=d.join(process.resourcesPath,"python","vxi11-api.py"):r=d.join(__dirname,"../src/services/python/vxi11-api.py"),!h||!h.address)return o("error","No device selected!"),{status:"error",message:"No device selected"};if(!f)return o("error","No save directory selected!"),{status:"error",message:"No save directory selected"};const i=h.address;try{const n=new Date().toISOString(),a=$("python3",[r,"--ip",i,"--start-test",JSON.stringify(e),"--savedir",f]),g=crypto.randomUUID();let s=null;return await new Promise((R,P)=>{a.stdout.on("data",c=>{console.log("Raw logs from Python:",c.toString().trim());try{const y=JSON.parse(c.toString().trim());y.status==="running"&&!s&&(s=y.test_id||g,p.set(s,a),R({id:s,name:e.name,duration:e.duration,startTime:n,endTime:null,status:"running",logFilePath:y.log_file_path}),o("info",`Test started successfully. Log file: ${y.log_file_path}`))}catch(y){console.error("Error parsing Python response:",y.message)}}),a.stderr.on("data",c=>{console.error("Error from Python:",c.toString().trim()),P(c.toString().trim())}),a.on("close",c=>{c!==0&&!s&&P(new Error(`Python script exited with code ${c}`)),s&&(p.delete(s),console.log(`Test ${s} has been removed from ongoingTests.`))})})}catch(n){return o("error","Error executing start-test:",n),{status:"error",message:n.message||"Unknown error"}}});u.handle("stop-test",async(t,e)=>p.has(e)?(p.get(e).kill(),p.delete(e),{status:"success",message:`Test ${e} stopped.`}):{status:"error",message:`Test with ID ${e} not found. Available tests: ${Array.from(p.keys()).join(", ")}`});function _(){const t=new E({width:1500,height:1025,webPreferences:{nodeIntegration:!0,contextIsolation:!0,preload:d.join(__dirname,"preload.js"),contextIsolation:!0,nodeIntegration:!1}}),e=process.env.VITE_DEV_SERVER_URL;e?t.loadURL(e):t.loadFile(d.join(__dirname,"../dist/index.html"))}l.whenReady().then(()=>{_(),l.on("activate",()=>{E.getAllWindows().length===0&&_()})});l.on("window-all-closed",()=>{process.platform!=="darwin"&&l.quit()});l.on("before-quit",()=>{p.forEach((t,e)=>{console.log(`Terminating test: ${e}`),t.kill()})});
+"use strict";
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const path = require("path");
+const { exec } = require("child_process");
+const { spawn } = require("child_process");
+const Store = require("electron-store");
+const store = new Store();
+require("fs");
+const ongoingTests = /* @__PURE__ */ new Map();
+require("date-fns/locale");
+let savedSelectedDevice = null;
+let saveDirectory = null;
+let mainWindowGlobal = null;
+ipcMain.handle("get-tests", () => {
+  console.log("main.js got test from store:", store.get("tests", []));
+  saveDirectory = store.get("saveDirectory", null);
+  return store.get("tests", []);
+});
+ipcMain.handle("save-tests", (_, tests) => {
+  store.set("tests", tests);
+  store.set("saveDirectory", saveDirectory);
+  console.log("main.js  Saved tests:", tests);
+  return { success: true };
+});
+ipcMain.handle("selectDirectory", async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ["openDirectory"]
+  });
+  if (canceled || filePaths.length === 0) {
+    return null;
+  }
+  saveDirectory = filePaths[0];
+  return filePaths[0];
+});
+function addLog(level, ...args) {
+  console.log(`[${level.toUpperCase()}]`, ...args);
+}
+ipcMain.handle("save-selected-device", (_, device) => {
+  savedSelectedDevice = device;
+});
+ipcMain.handle("search-devices", async (_, subnet) => {
+  let pythonScriptPath;
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, "python", "vxi11-api.py");
+  } else {
+    pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
+  }
+  addLog("info", "Resolved Python script path:", pythonScriptPath);
+  try {
+    const { stdout } = await new Promise((resolve, reject) => {
+      exec(
+        `python3 ${pythonScriptPath} --discover "${subnet}"`,
+        (error, stdout2, stderr) => {
+          if (error) {
+            addLog("error", "Error running Python script:", stderr);
+            reject(error);
+          } else {
+            resolve({ stdout: stdout2 });
+          }
+        }
+      );
+    });
+    addLog("info", "Raw Python output:", stdout.trim());
+    return JSON.parse(stdout.trim());
+  } catch (error) {
+    addLog("error", "Error executing discovery:", error);
+    return { error: error.message };
+  }
+});
+ipcMain.handle("test-command", async (_, command) => {
+  let pythonScriptPath;
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, "python", "vxi11-api.py");
+  } else {
+    pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
+  }
+  addLog("Resolved Python script path:", pythonScriptPath);
+  if (!savedSelectedDevice || !savedSelectedDevice.address) {
+    addLog("error", "No device selected!");
+    return `Error: No device selected`;
+  }
+  const ip = savedSelectedDevice.address;
+  try {
+    const { stdout } = await new Promise((resolve, reject) => {
+      exec(
+        `python3 ${pythonScriptPath} --ip "${ip}" --command "${command}"`,
+        (error, stdout2, stderr) => {
+          if (error) {
+            addLog("error", "Error running Python script:", stderr);
+            reject(error);
+          } else {
+            resolve({ stdout: stdout2 });
+          }
+        }
+      );
+    });
+    addLog("info", "Raw Python output:", stdout.trim());
+    return stdout.trim();
+  } catch (error) {
+    addLog("error", "Error executing command:", error);
+    return `Error: ${error.message}`;
+  }
+});
+ipcMain.handle("start-test", async (_, testData) => {
+  let pythonScriptPath;
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, "python", "vxi11-api.py");
+  } else {
+    pythonScriptPath = path.join(__dirname, "../src/services/python/vxi11-api.py");
+  }
+  if (!savedSelectedDevice || !savedSelectedDevice.address) {
+    addLog("error", "No device selected!");
+    return { status: "error", message: "No device selected" };
+  }
+  if (!saveDirectory) {
+    addLog("error", "No save directory selected!");
+    return { status: "error", message: "No save directory selected" };
+  }
+  const ip = savedSelectedDevice.address;
+  try {
+    const startTime = (/* @__PURE__ */ new Date()).toISOString();
+    const childProcess = spawn("python3", [
+      pythonScriptPath,
+      "--ip",
+      ip,
+      "--start-test",
+      JSON.stringify(testData),
+      "--savedir",
+      saveDirectory
+    ]);
+    const testId = crypto.randomUUID();
+    let currentTestId = null;
+    const resultPromise = new Promise((resolve, reject) => {
+      childProcess.stdout.on("data", (data) => {
+        console.log("Raw logs from Python:", data.toString().trim());
+        try {
+          const parsedData = JSON.parse(data.toString().trim());
+          if (parsedData.status === "running" && !currentTestId) {
+            currentTestId = parsedData.test_id || testId;
+            ongoingTests.set(currentTestId, childProcess);
+            resolve({
+              id: currentTestId,
+              name: testData.name,
+              duration: testData.duration,
+              startTime,
+              endTime: null,
+              // Will be updated later
+              status: "running",
+              logFilePath: parsedData.log_file_path
+            });
+            addLog("info", `Test started successfully. Log file: ${parsedData.log_file_path}`);
+          }
+        } catch (err) {
+          console.error("Error parsing Python response:", err.message);
+        }
+      });
+      childProcess.stderr.on("data", (stderr) => {
+        console.error("Error from Python:", stderr.toString().trim());
+        reject(stderr.toString().trim());
+      });
+      childProcess.on("close", (code) => {
+        if (code !== 0 && !currentTestId) {
+          reject(new Error(`Python script exited with code ${code}`));
+        }
+        if (currentTestId) {
+          ongoingTests.delete(currentTestId);
+          console.log(`Test ${currentTestId} has been removed from ongoingTests.`);
+          if (code === 0) {
+            mainWindowGlobal.webContents.send("test-completed", {
+              testId: currentTestId
+            });
+          }
+        }
+      });
+    });
+    const initialResult = await resultPromise;
+    return initialResult;
+  } catch (error) {
+    addLog("error", "Error executing start-test:", error);
+    return { status: "error", message: error.message || "Unknown error" };
+  }
+});
+ipcMain.handle("stop-test", async (_, testId) => {
+  if (!ongoingTests.has(testId)) {
+    return {
+      status: "error",
+      message: `Test with ID ${testId} not found. Available tests: ${Array.from(ongoingTests.keys()).join(", ")}`
+    };
+  }
+  const childProcess = ongoingTests.get(testId);
+  childProcess.kill();
+  ongoingTests.delete(testId);
+  return { status: "success", message: `Test ${testId} stopped.` };
+});
+function createWindow() {
+  const mainWindow = new BrowserWindow({
+    width: 1500,
+    height: 1025,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      // Enables contextBridge
+      nodeIntegration: false
+      // Disables direct Node.js access in renderer
+    }
+  });
+  const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
+  if (VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+  }
+  mainWindowGlobal = mainWindow;
+}
+app.whenReady().then(() => {
+  createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+app.on("before-quit", () => {
+  ongoingTests.forEach((childProcess, testId) => {
+    console.log(`Terminating test: ${testId}`);
+    childProcess.kill();
+  });
+});

@@ -12,7 +12,7 @@ let savedSelectedDevice = null;
 let saveDirectory = null;
 // Keep this in memory as the “cached” list, loaded on app start.
 let allTests = [];
-
+let mainWindowGlobal = null;
 //=================================================================================
 ipcMain.handle('get-tests', () => {
   console.log('main.js got test from store:', store.get('tests', []));
@@ -210,10 +210,18 @@ ipcMain.handle('start-test', async (_, testData) => {
         if (code !== 0 && !currentTestId) {
           reject(new Error(`Python script exited with code ${code}`));
         }
-
+      
         if (currentTestId) {
-          ongoingTests.delete(currentTestId); // Use the stored test_id to clean up
+          ongoingTests.delete(currentTestId);
           console.log(`Test ${currentTestId} has been removed from ongoingTests.`);
+      
+          // If code = 0, we can interpret that as a natural completion
+          if (code === 0) {
+            // "test-completed" is just an example channel name
+            mainWindowGlobal.webContents.send('test-completed', {
+              testId: currentTestId,
+            });
+          }
         }
       });
     });
@@ -262,6 +270,7 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+  mainWindowGlobal = mainWindow;
 }
 //=================================================================================
 app.whenReady().then(() => {

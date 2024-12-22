@@ -35,4 +35,6 @@ contextBridge.exposeInMainWorld(
   selectDirectory: () => ipcRenderer.invoke('selectDirectory'),
   getTests: () => ipcRenderer.invoke('get-tests'),
   saveTests: (tests) => ipcRenderer.invoke('save-tests', tests),
+  onTestCompleted: (callback) => ipcRenderer.on('test-completed', callback),
+  offTestCompleted: (callback) => ipcRenderer.off('test-completed', callback),
 });
