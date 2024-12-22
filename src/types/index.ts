@@ -23,4 +23,4 @@ export interface Device {
 
 export type Theme = 'light' | 'dark';
 
-export type Page = 'tests' | 'temp';
+export type Page = 'tests' | 'analyze';

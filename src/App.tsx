@@ -5,7 +5,7 @@ import { DeviceStatus } from './components/DeviceStatus';
 import { SideLogs } from './components/SideLogs';
 import { useDevice } from './components/DeviceContext';
 import { TestsPage } from './pages/TestsPage';
-import { TempPage } from './pages/TempPage';
+import { AnalyzePage } from './pages/AnalyzePage';
 import { MockInstrument } from './services/mockInstrument';
 import { useTheme } from './hooks/useTheme';
 import { TestResultsTable } from './components/TestResultsTable';
@@ -148,8 +148,8 @@ export default function App() {
     switch (activePage) {
       case 'tests':
         return <TestsPage tests={tests} onStartTest={handleStartTest} />;
-      case 'temp':
-        return <TempPage />;
+      case 'analyze':
+        return <AnalyzePage />;
       default:
         return <TestsPage tests={tests} onStartTest={handleStartTest} />;
     }

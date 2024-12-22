@@ -1,7 +1,7 @@
 import React from 'react';
 import { Construction } from 'lucide-react';
 
-export function TempPage() {
+export function AnalyzePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <Construction className="h-16 w-16 text-gray-400 mb-4" />

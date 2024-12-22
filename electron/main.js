@@ -250,6 +250,10 @@ ipcMain.handle('stop-test', async (_, testId) => {
 });
 //=================================================================================
 function createWindow() {
+  const iconPath = app.isPackaged
+  ? path.join(process.resourcesPath, 'icons', 'ammeter.png') // Packaged icon path
+  : path.join(__dirname, 'assets/icons/ammeter.png'); // Development icon path
+
   const mainWindow = new BrowserWindow({
     width: 1500,
     height: 1025,
@@ -259,19 +263,21 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, // Enables contextBridge
       nodeIntegration: false, // Disables direct Node.js access in renderer
-    }
+    },
+    icon: iconPath, // Dynamically set the icon path
   });
 
   const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
   if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
-  //  mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools(); // Uncomment for debugging
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
   mainWindowGlobal = mainWindow;
 }
+
 //=================================================================================
 app.whenReady().then(() => {
   createWindow();
@@ -282,6 +288,7 @@ app.whenReady().then(() => {
     }
   });
 });
+
 //=================================================================================
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

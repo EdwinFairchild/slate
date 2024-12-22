@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useDevice } from './DeviceContext';
+import { ChartBarIcon } from '@heroicons/react/24/outline';
+
 import {
   Activity,
   Settings,
@@ -41,15 +43,14 @@ export function Sidebar({
       const directory = await window.api.selectDirectory();
       addLog('info', `Selected directory: ${directory}`);
     } catch (error) {
-      addLog('error','Error selecting directory:', error);
+      addLog('error', 'Error selecting directory:', error);
     }
   };
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
-        isOpen ? 'w-64' : 'w-0'
-      } overflow-hidden`}
+      className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${isOpen ? 'w-64' : 'w-0'
+        } overflow-hidden`}
     >
       <div className="flex flex-col h-full">
 
@@ -61,26 +62,25 @@ export function Sidebar({
           <nav className="space-y-2">
             <button
               onClick={() => onNavigate('tests')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
-                activePage === 'tests'
+              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'tests'
                   ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
+                }`}
             >
               <Activity className="h-5 w-5 mr-2" />
               Tests
             </button>
             <button
-              onClick={() => onNavigate('temp')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
-                activePage === 'temp'
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Settings className="h-5 w-5 mr-2" />
-              Temporary
-            </button>
+  onClick={() => onNavigate('analyze')}
+  className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
+    activePage === 'analyze'
+      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+  }`}
+>
+  <ChartBarIcon className="h-5 w-5 mr-2" />
+  Analyze
+</button>
           </nav>
         </div>
 
@@ -120,11 +120,10 @@ export function Sidebar({
                   setSelectedDevice(device);
                   window.api.saveSelectedDevice(device); // If needed
                 }}
-                className={`w-full p-3 rounded-lg text-left transition-colors ${
-                  selectedDevice?.id === device.id
+                className={`w-full p-3 rounded-lg text-left transition-colors ${selectedDevice?.id === device.id
                     ? 'bg-blue-100 dark:bg-blue-900'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -136,11 +135,10 @@ export function Sidebar({
                     </p>
                   </div>
                   <span
-                    className={`h-2 w-2 rounded-full ${
-                      device.isConnected
+                    className={`h-2 w-2 rounded-full ${device.isConnected
                         ? 'bg-green-500'
                         : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
+                      }`}
                   />
                 </div>
               </button>

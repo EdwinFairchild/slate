@@ -76,10 +76,10 @@ export function SCPIReference() {
     try {
       const response = await window.api.testCommand(command);
 
-      addLog('info', `Response: ${response} command: ${command}`);
+      addLog('info', `command sent: ${command}\n\nResponse: ${response}`);
     } catch (error) {
 
-      addLog('error', `Error: ${error} command: ${command}`);
+      addLog('error', `command: ${command}\n\nError: ${error} `);
     }
   };
   const handleSendCustomCommand = () => {

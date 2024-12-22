@@ -193,6 +193,7 @@ ipcMain.handle("stop-test", async (_, testId) => {
   return { status: "success", message: `Test ${testId} stopped.` };
 });
 function createWindow() {
+  const iconPath = app.isPackaged ? path.join(process.resourcesPath, "icons", "ammeter.png") : path.join(__dirname, "assets/icons/ammeter.png");
   const mainWindow = new BrowserWindow({
     width: 1500,
     height: 1025,
@@ -204,7 +205,9 @@ function createWindow() {
       // Enables contextBridge
       nodeIntegration: false
       // Disables direct Node.js access in renderer
-    }
+    },
+    icon: iconPath
+    // Dynamically set the icon path
   });
   const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
   if (VITE_DEV_SERVER_URL) {
