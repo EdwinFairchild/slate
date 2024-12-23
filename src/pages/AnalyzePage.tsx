@@ -1,11 +1,11 @@
 import React from 'react';
 import { FolderOpen } from 'lucide-react';
 import { FileList } from '../components/FileList';
-import { CSVEditor } from '../components/CSVEditor';
 import { CSVPreview } from '../components/CSVPreview';
 import { useCSVData } from '../hooks/useCSVData';
 import { useAnalyzePage } from '../components/AnalyzePageContext';
 import { Alert } from '../components/ui/Alert';
+
 export function AnalyzePage() {
   const {
     directoryPath,
@@ -18,11 +18,46 @@ export function AnalyzePage() {
     setCachedData,
   } = useAnalyzePage();
 
-  const { data, headers, loading, error, updateColumn } = useCSVData(
+  const { data, headers, loading, error } = useCSVData(
     selectedFile ? `${directoryPath}/${selectedFile}` : null,
     cachedData,
     setCachedData
   );
+
+  const handleApplyRegex = (header: string, regex: string) => {
+    try {
+      const regExp = new RegExp(regex, 'g');
+      const newData = cachedData?.data.map(row => ({
+        ...row,
+        [header]: row[header]?.replace(regExp, ''),
+      })) || [];
+
+      setCachedData({ headers, data: newData });
+    } catch (err) {
+      console.error('Error applying regex:', err);
+    }
+  };
+
+  const handleSaveFile = async () => {
+    if (!cachedData || !selectedFile || !directoryPath) {
+      console.error('No file selected or no data to save.');
+      return;
+    }
+
+    const filePath = `${directoryPath}/${selectedFile}`;
+    try {
+      await window.api.writeCSV({
+        filePath,
+        headers: cachedData.headers,
+        data: cachedData.data,
+      });
+      console.log(`File saved successfully to ${filePath}`);
+      alert('File saved successfully!');
+    } catch (err) {
+      console.error('Failed to save file:', err);
+      alert('Failed to save file.');
+    }
+  };
 
   const handleDirectoryOpen = async () => {
     try {
@@ -31,7 +66,7 @@ export function AnalyzePage() {
         setDirectoryPath(result.path);
         setFiles(result.files);
         setSelectedFile(null);
-        setCachedData(null); // Clear cached data
+        setCachedData(null);
       }
     } catch (error) {
       console.error('Failed to open directory:', error);
@@ -41,32 +76,28 @@ export function AnalyzePage() {
   const handleFileSelect = (file: string) => {
     if (file !== selectedFile) {
       setSelectedFile(file);
-      setCachedData(null); // Clear cache for the new file
+      setCachedData(null);
     }
   };
 
   return (
     <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between">
-      
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">CSV Analysis</h2>
         <Alert
           message="Make a back-up of your original file before you edit!!!"
-          type="error" // Alert type for warning (customizable)
+          type="error"
         />
-       
       </div>
       <button
-          onClick={handleDirectoryOpen}
-          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <FolderOpen className="h-4 w-4 mr-2" />
-          Open Directory
-        </button>
+        onClick={handleDirectoryOpen}
+        className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      >
+        <FolderOpen className="h-4 w-4 mr-2" />
+        Open Directory
+      </button>
       <div className="flex flex-1 space-x-4 min-h-0">
-        
         <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3">
-          
           <FileList files={files} selectedFile={selectedFile} onFileSelect={handleFileSelect} />
         </div>
 
@@ -79,11 +110,16 @@ export function AnalyzePage() {
             <div className="flex-1 flex items-center justify-center text-red-600">{error}</div>
           ) : selectedFile && headers.length > 0 ? (
             <>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                <CSVEditor headers={headers} data={data[0]} onUpdateColumn={updateColumn} />
-              </div>
               <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 min-h-0">
-                <CSVPreview headers={headers} data={data} />
+                <CSVPreview headers={headers} data={data} onApplyRegex={handleApplyRegex} />
+                <div className="mt-4">
+                  <button
+                    onClick={handleSaveFile}
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Save File
+                  </button>
+                </div>
               </div>
             </>
           ) : (
