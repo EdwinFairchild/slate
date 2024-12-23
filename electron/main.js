@@ -10,7 +10,8 @@ const csvParser = require('csv-parser');
 
 const { createObjectCsvWriter } = require('csv-writer');
 // use stringyfy to convert data to csv
-const { stringify } = require('csv-string');
+
+const { stringify } = require('csv-stringify');
 // Map to track ongoing tests
 const ongoingTests = new Map();
 const { te } = require('date-fns/locale');
@@ -311,8 +312,7 @@ ipcMain.handle('dialog:openDirectory', async () => {
 //=================================================================================
 let fullDatasetCache = {}; // Cache for full datasets
 ipcMain.handle('file:readCSV', async (_, filePath) => {
-  console.log(`Attempting to read CSV file: ${filePath}`);
-
+ 
   return new Promise((resolve, reject) => {
     const previewRows = [];
     let rowCount = 0;
@@ -339,17 +339,18 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
         rowCount++;
 
         if (rowCount % 10000 === 0) {
-          console.log(`Processed ${rowCount} rows so far...`);
+          console.log('Processed ${ rowCount } rows so far...');
         }
 
         fullDatasetCache[filePath].push(row);
 
-        if (rowCount <= 50) {
+        if (rowCount <= 10) {
           previewRows.push(row);
         }
       })
       .on('end', () => {
         console.log(`CSV parsing completed. Total rows: ${rowCount}`);
+
         resolve({
           headers: Object.keys(previewRows[0] || {}),
           data: previewRows,
@@ -366,13 +367,28 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, data }) => {
     if (!fullDatasetCache[filePath]) {
       throw new Error('Full dataset is not cached. Unable to save.');
     }
+    //print headers
+    console.log('Headers:', headers);
+    console.log('Data:', data);
 
-    console.log(`Writing CSV to: ${filePath}`);
-    console.log(`Cached rows: ${fullDatasetCache[filePath]?.length || 0}`);
+    console.log('Writing CSV to: ${filePath}');
 
-    // Update the cached dataset by applying changes to all rows
+    console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
+
+    // Apply regex updates to the entire cached dataset
     const updatedDataset = fullDatasetCache[filePath].map((row) => {
-      return { ...row, ...data[0] }; // Apply the changes from the single edited row
+      const updatedRow = data.find((previewRow) => {
+        // Match rows based on a unique identifier (e.g., a specific column value)
+        return row[headers[0]] === previewRow[headers[0]];
+      });
+
+      if (updatedRow) {
+        console.log('Merging updated row:', updatedRow);
+        // Merge updated preview row with the original row
+        return { ...row, ...updatedRow };
+      }
+
+      return row; // Keep the original row if no match is found
     });
 
     // Configure the CSV writer
@@ -391,6 +407,9 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, data }) => {
     throw error;
   }
 });
+
+
+
 
 //=================================================================================
 app.whenReady().then(() => {

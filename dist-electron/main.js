@@ -8,7 +8,7 @@ const store = new Store();
 const fs = require("fs");
 require("csv-parser");
 const { createObjectCsvWriter } = require("csv-writer");
-require("csv-string");
+require("csv-stringify");
 const ongoingTests = /* @__PURE__ */ new Map();
 require("date-fns/locale");
 require("events").defaultMaxListeners = 100;
@@ -245,7 +245,6 @@ ipcMain.handle("dialog:openDirectory", async () => {
 });
 let fullDatasetCache = {};
 ipcMain.handle("file:readCSV", async (_, filePath) => {
-  console.log(`Attempting to read CSV file: ${filePath}`);
   return new Promise((resolve, reject) => {
     const previewRows = [];
     let rowCount = 0;
@@ -266,10 +265,10 @@ ipcMain.handle("file:readCSV", async (_, filePath) => {
     }).on("data", (row) => {
       rowCount++;
       if (rowCount % 1e4 === 0) {
-        console.log(`Processed ${rowCount} rows so far...`);
+        console.log("Processed ${ rowCount } rows so far...");
       }
       fullDatasetCache[filePath].push(row);
-      if (rowCount <= 50) {
+      if (rowCount <= 10) {
         previewRows.push(row);
       }
     }).on("end", () => {
@@ -283,15 +282,23 @@ ipcMain.handle("file:readCSV", async (_, filePath) => {
   });
 });
 ipcMain.handle("file:writeCSV", async (_, { filePath, headers, data }) => {
-  var _a;
   try {
     if (!fullDatasetCache[filePath]) {
       throw new Error("Full dataset is not cached. Unable to save.");
     }
-    console.log(`Writing CSV to: ${filePath}`);
-    console.log(`Cached rows: ${((_a = fullDatasetCache[filePath]) == null ? void 0 : _a.length) || 0}`);
+    console.log("Headers:", headers);
+    console.log("Data:", data);
+    console.log("Writing CSV to: ${filePath}");
+    console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
     const updatedDataset = fullDatasetCache[filePath].map((row) => {
-      return { ...row, ...data[0] };
+      const updatedRow = data.find((previewRow) => {
+        return row[headers[0]] === previewRow[headers[0]];
+      });
+      if (updatedRow) {
+        console.log("Merging updated row:", updatedRow);
+        return { ...row, ...updatedRow };
+      }
+      return row;
     });
     const csvWriter = createObjectCsvWriter({
       path: filePath,

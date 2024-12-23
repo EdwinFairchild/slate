@@ -33,6 +33,7 @@ export function AnalyzePage() {
       })) || [];
 
       setCachedData({ headers, data: newData });
+      console.log('Updated cached data:', newData); // Debug log
     } catch (err) {
       console.error('Error applying regex:', err);
     }
@@ -43,8 +44,10 @@ export function AnalyzePage() {
       console.error('No file selected or no data to save.');
       return;
     }
-
+  
     const filePath = `${directoryPath}/${selectedFile}`;
+    console.log(`Saving file to ${filePath}...`); // Debug log
+  
     try {
       await window.api.writeCSV({
         filePath,
@@ -58,6 +61,7 @@ export function AnalyzePage() {
       alert('Failed to save file.');
     }
   };
+  
 
   const handleDirectoryOpen = async () => {
     try {
@@ -112,7 +116,9 @@ export function AnalyzePage() {
             <>
               <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 min-h-0">
                 <CSVPreview headers={headers} data={data} onApplyRegex={handleApplyRegex} />
-                <div className="mt-4">
+
+              </div>
+                <div className="flex justify-end mt-4">
                   <button
                     onClick={handleSaveFile}
                     className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -120,7 +126,6 @@ export function AnalyzePage() {
                     Save File
                   </button>
                 </div>
-              </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
