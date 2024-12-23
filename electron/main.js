@@ -324,11 +324,11 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
       .pipe(
         parse({
           headers: true, // Treat the first row as headers
-          quote: '"', // Use double quotes for quoted fields
-          escape: '"', // Escape character for quotes
-          ignoreEmpty: true, // Ignore empty rows
-          relaxQuotes: true, // Allow unbalanced quotes
-          skipLinesWithError: true, // Skip malformed rows
+          // quote: '"', // Use double quotes for quoted fields
+          // escape: '"', // Escape character for quotes
+          // ignoreEmpty: true, // Ignore empty rows
+          // relaxQuotes: true, // Allow unbalanced quotes
+          // skipLinesWithError: true, // Skip malformed rows
         })
       )
       .on('error', (error) => {

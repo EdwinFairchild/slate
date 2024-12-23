@@ -1,24 +1,34 @@
 import { useState, useEffect } from 'react';
 import type { CSVData } from '../types/csv';
 
-export function useCSVData(filePath: string | null) {
-  const [headers, setHeaders] = useState<string[]>([]);
-  const [data, setData] = useState<Record<string, string>[]>([]);
+export function useCSVData(
+  filePath: string | null,
+  cachedData: CSVData | null,
+  setCachedData: (data: CSVData) => void
+) {
+  const [headers, setHeaders] = useState<string[]>(cachedData?.headers || []);
+  const [data, setData] = useState<Record<string, string>[]>(cachedData?.data || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadCSV() {
-      const hardcodedFilePath = '/home/eddie/Documents/edwincito_77a5c843.csv';
-     
-      if (!filePath && !hardcodedFilePath) return;
+    if (!filePath) return;
 
+    // Skip loading if data is already cached for this file
+    if (cachedData) {
+      setHeaders(cachedData.headers);
+      setData(cachedData.data);
+      return;
+    }
+
+    async function loadCSV() {
       try {
         setLoading(true);
         setError(null);
         const result = await window.api.readCSV(filePath);
         setHeaders(result.headers);
         setData(result.data);
+        setCachedData(result); // Cache the loaded data
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load CSV');
         console.error('Failed to load CSV:', err);
@@ -28,26 +38,24 @@ export function useCSVData(filePath: string | null) {
     }
 
     loadCSV();
-  }, [filePath]);
+  }, [filePath, cachedData, setCachedData]);
 
   const updateColumn = async (column: string, value: string) => {
-    const hardcodedFilePath = '/home/eddie/Documents/edwin_2502e71a.csv';
-    const targetFilePath =  filePath;
-    console.log('Target file path:', targetFilePath); // Debug log
-    if (!targetFilePath) return;
+    if (!filePath) return;
 
-    const newData = data.map(row => ({
+    const newData = data.map((row) => ({
       ...row,
-      [column]: value
+      [column]: value,
     }));
 
     try {
       await window.api.writeCSV({
-        filePath: targetFilePath,
+        filePath,
         headers,
-        data: newData
+        data: newData,
       });
       setData(newData);
+      setCachedData({ headers, data: newData }); // Update the cached data
     } catch (err) {
       console.error('Failed to update CSV:', err);
       setError(err instanceof Error ? err.message : 'Failed to update CSV');
