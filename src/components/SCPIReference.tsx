@@ -18,36 +18,36 @@ const scpiCommands: SCPICommand[] = [
     command: '*RST',
     description: 'Reset the device to default settings'
   },
-  {
-    category: 'Measurement',
-    command: 'CYMOMETER?',
-    description: 'Read Freq. Counter'
-  },
-  {
-    category: 'Measurement',
-    command: 'C1:BSWV?',
-    description: 'Reads basic wave parameters'
-  },
-  {
-    category: 'Measurement',
-    command: 'MEAS:CURR?',
-    description: 'Measure current'
-  },
-  {
-    category: 'Measurement',
-    command: 'MEAS:RES?',
-    description: 'Measure resistance'
-  },
-  {
-    category: 'Configuration',
-    command: 'CONF:VOLT:DC',
-    description: 'Configure for DC voltage measurements'
-  },
-  {
-    category: 'Configuration',
-    command: 'CONF:CURR:DC',
-    description: 'Configure for DC current measurements'
-  }
+  // {
+  //   category: 'Measurement',
+  //   command: 'CYMOMETER?',
+  //   description: 'Read Freq. Counter'
+  // },
+  // {
+  //   category: 'Measurement',
+  //   command: 'C1:BSWV?',
+  //   description: 'Reads basic wave parameters'
+  // },
+  // {
+  //   category: 'Measurement',
+  //   command: 'MEAS:CURR?',
+  //   description: 'Measure current'
+  // },
+  // {
+  //   category: 'Measurement',
+  //   command: 'MEAS:RES?',
+  //   description: 'Measure resistance'
+  // },
+  // {
+  //   category: 'Configuration',
+  //   command: 'CONF:VOLT:DC',
+  //   description: 'Configure for DC voltage measurements'
+  // },
+  // {
+  //   category: 'Configuration',
+  //   command: 'CONF:CURR:DC',
+  //   description: 'Configure for DC current measurements'
+  // }
 ];
 
 export function SCPIReference() {
