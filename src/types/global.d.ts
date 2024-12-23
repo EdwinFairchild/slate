@@ -6,6 +6,9 @@ declare global {
       searchDevices: (subnet: string) => Promise<any>;
       saveSelectedDevice: (device: Device) => void;
       startTest: (testData: Omit<Test, 'id' | 'isExpanded'>) => Promise<any>;
+      readCSV: (filePath: string) => Promise<{ headers: string[]; data: Record<string, string>[] }>;
+      writeCSV: (params: { filePath: string; headers: string[]; data: Record<string, string>[] }) => Promise<boolean>;
+      openDirectory: () => Promise<{ path: string; files: string[] } | null>;
     };
   }
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TestSetup } from '../components/TestSetup';
 import { SCPIReference } from '../components/SCPIReference';
 import type { TestResult } from '../types/test';
+import { DeviceStatus } from '../components/DeviceStatus';
 
 interface TestsPageProps {
   tests: TestResult[];
@@ -14,7 +15,10 @@ export function TestsPage({ tests, onStartTest }: TestsPageProps) {
 
   return (
     <div className="space-y-6 h-full overflow-auto pb-4">
+            <DeviceStatus />
       <div className="grid grid-cols-12 gap-6">
+      
+        
         <div className="col-span-7">
          
           <TestSetup onStartTest={onStartTest} />

@@ -5,9 +5,14 @@ const { exec } = require("child_process");
 const { spawn } = require("child_process");
 const Store = require("electron-store");
 const store = new Store();
-require("fs");
+const fs = require("fs");
+require("csv-parser");
+const { createObjectCsvWriter } = require("csv-writer");
+require("csv-string");
 const ongoingTests = /* @__PURE__ */ new Map();
 require("date-fns/locale");
+require("events").defaultMaxListeners = 100;
+const { parse } = require("fast-csv");
 let savedSelectedDevice = null;
 let saveDirectory = null;
 let mainWindowGlobal = null;
@@ -217,6 +222,89 @@ function createWindow() {
   }
   mainWindowGlobal = mainWindow;
 }
+ipcMain.handle("dialog:openDirectory", async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ["openDirectory"]
+  });
+  if (!canceled) {
+    return new Promise((resolve, reject) => {
+      fs.readdir(filePaths[0], (err, files) => {
+        if (err) {
+          console.error("Failed to read directory:", err);
+          return reject(err);
+        }
+        const csvFiles = files.filter((file) => file.endsWith(".csv"));
+        resolve({
+          path: filePaths[0],
+          files: csvFiles
+        });
+      });
+    });
+  }
+  return null;
+});
+let fullDatasetCache = {};
+ipcMain.handle("file:readCSV", async (_, filePath) => {
+  console.log(`Attempting to read CSV file: ${filePath}`);
+  return new Promise((resolve, reject) => {
+    const previewRows = [];
+    let rowCount = 0;
+    fullDatasetCache[filePath] = [];
+    fs.createReadStream(filePath).pipe(
+      parse({
+        headers: true
+        // Treat the first row as headers
+        // quote: '"', // Use double quotes for quoted fields
+        // escape: '"', // Escape character for quotes
+        // ignoreEmpty: true, // Ignore empty rows
+        // relaxQuotes: true, // Allow unbalanced quotes
+        // skipLinesWithError: true, // Skip malformed rows
+      })
+    ).on("error", (error) => {
+      console.error("CSV parsing error:", error);
+      reject(error);
+    }).on("data", (row) => {
+      rowCount++;
+      if (rowCount % 1e4 === 0) {
+        console.log(`Processed ${rowCount} rows so far...`);
+      }
+      fullDatasetCache[filePath].push(row);
+      if (rowCount <= 50) {
+        previewRows.push(row);
+      }
+    }).on("end", () => {
+      console.log(`CSV parsing completed. Total rows: ${rowCount}`);
+      resolve({
+        headers: Object.keys(previewRows[0] || {}),
+        data: previewRows,
+        totalRows: rowCount
+      });
+    });
+  });
+});
+ipcMain.handle("file:writeCSV", async (_, { filePath, headers, data }) => {
+  var _a;
+  try {
+    if (!fullDatasetCache[filePath]) {
+      throw new Error("Full dataset is not cached. Unable to save.");
+    }
+    console.log(`Writing CSV to: ${filePath}`);
+    console.log(`Cached rows: ${((_a = fullDatasetCache[filePath]) == null ? void 0 : _a.length) || 0}`);
+    const updatedDataset = fullDatasetCache[filePath].map((row) => {
+      return { ...row, ...data[0] };
+    });
+    const csvWriter = createObjectCsvWriter({
+      path: filePath,
+      header: headers.map((header) => ({ id: header, title: header }))
+    });
+    await csvWriter.writeRecords(updatedDataset);
+    console.log("File saved successfully.");
+    return true;
+  } catch (error) {
+    console.error("Failed to write CSV:", error);
+    throw error;
+  }
+});
 app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
-import { DeviceStatus } from './components/DeviceStatus';
+// import { DeviceStatus } from './components/DeviceStatus';
 import { SideLogs } from './components/SideLogs';
 import { useDevice } from './components/DeviceContext';
 import { TestsPage } from './pages/TestsPage';
@@ -200,9 +200,9 @@ export default function App() {
             </div>
           </div>
 
-          <main className="mb-8">
+          {/* <main className="mb-8">
             <DeviceStatus />
-          </main>
+          </main> */}
 
           <div className="flex-1 overflow-hidden">
             {renderActivePage()}
