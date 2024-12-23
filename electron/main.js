@@ -178,6 +178,7 @@ ipcMain.handle('start-test', async (_, testData) => {
       '--savedir',
       saveDirectory,
     ]);
+    // console.log("Data was the following:", testData);
 
     // Generate a unique test ID
     const testId = crypto.randomUUID();

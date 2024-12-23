@@ -83,46 +83,41 @@ def send_scpi_command(device_address, command):
     """
     timeout = 3000  # Timeout in milliseconds
     response_size = 65536  # Maximum response size
-    rm = pyvisa.ResourceManager()
-    oscilloscope = rm.open_resource(f"TCPIP::{device_address}::INSTR")
+    # rm = pyvisa.ResourceManager()
+    # oscilloscope = rm.open_resource(f"TCPIP::{device_address}::INSTR")
 
 
     # Initialize the LXI library
-    # if lxi.lxi_init() != 0:
-    #     raise RuntimeError("Failed to initialize the LXI library")
+    if lxi.lxi_init() != 0:
+        raise RuntimeError("Failed to initialize the LXI library")
 
-    # # Connect to the device
-    # device = lxi.lxi_connect(device_address.encode('utf-8'), 0, None, timeout, 0)  # Using VXI-11 protocol
-    # if device < 0:
-    #     raise RuntimeError(f"Failed to connect to device at {device_address}")
+    # Connect to the device
+    device = lxi.lxi_connect(device_address.encode('utf-8'), 0, None, timeout, 0)  # Using VXI-11 protocol
+    if device < 0:
+        raise RuntimeError(f"Failed to connect to device at {device_address}")
 
     try:
-        # Send the SCPI command with pyvisa
-        response = oscilloscope.query(command)
-        return response
 
-            
         # # Send the SCPI command
-        # if lxi.lxi_send(device, command.encode('utf-8'), len(command), timeout) < 0:
-        #     raise RuntimeError(f"Failed to send command: {command}")
+        if lxi.lxi_send(device, command.encode('utf-8'), len(command), timeout) < 0:
+            raise RuntimeError(f"Failed to send command: {command}")
 
-        # # Receive the response
-        # response_buffer = ctypes.create_string_buffer(response_size)
-        # received_size = lxi.lxi_receive(device, response_buffer, response_size, timeout)
-        # if received_size < 0:
-        #     raise RuntimeError("Failed to receive response from the device")
+        # Receive the response
+        response_buffer = ctypes.create_string_buffer(response_size)
+        received_size = lxi.lxi_receive(device, response_buffer, response_size, timeout)
+        if received_size < 0:
+            raise RuntimeError("Failed to receive response from the device")
 
-        # # Decode and return the response
-        # return response_buffer.value.decode('utf-8')
+        # Decode and return the response
+        return response_buffer.value.decode('utf-8')
     except Exception as e:
         return "No response "
 
     finally:
-        pass
-        
+   
         # Disconnect from the device
 
-        #lxi.lxi_disconnect(device)
+        lxi.lxi_disconnect(device)
 
 
 def handle_test_data(test_data, device_ip,output_dir):
@@ -180,12 +175,12 @@ def handle_test_data(test_data, device_ip,output_dir):
                         csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, "", str(e)])
 
                     # Wait after the command execution
-                    if wait_after > 0:
-                        time.sleep(wait_after)
+                    # if wait_after > 0:
+                    #     time.sleep(wait_after)
                 
                 # Wait for the specified interval before the next iteration
-                if interval > 0:
-                    time.sleep(interval)
+                # if interval > 0:
+                #     time.sleep(interval)
 
             return {
                 "status": "success",
