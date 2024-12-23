@@ -1,11 +1,11 @@
-import React from 'react';
+// import React from 'react';
 import { FolderOpen } from 'lucide-react';
 import { FileList } from '../components/FileList';
 import { CSVPreview } from '../components/CSVPreview';
 import { useCSVData } from '../hooks/useCSVData';
 import { useAnalyzePage } from '../components/AnalyzePageContext';
 import { Alert } from '../components/ui/Alert';
-
+import React, { useState } from 'react';
 export function AnalyzePage() {
   const {
     directoryPath,
@@ -16,6 +16,7 @@ export function AnalyzePage() {
     setSelectedFile,
     cachedData,
     setCachedData,
+    
   } = useAnalyzePage();
 
   const { data, headers, loading, error } = useCSVData(
@@ -23,6 +24,7 @@ export function AnalyzePage() {
     cachedData,
     setCachedData
   );
+  const [regexRules, setRegexRules] = useState({}); // Add state for regex rules
 
   const handleApplyRegex = (header: string, regex: string) => {
     try {
@@ -33,32 +35,40 @@ export function AnalyzePage() {
       })) || [];
 
       setCachedData({ headers, data: newData });
+
+      // Update regex rules state
+      setRegexRules(prevRules => ({
+        ...prevRules,
+        [header]: regex,
+      }));
+
       console.log('Updated cached data:', newData); // Debug log
+      console.log('Updated regex rules:', regexRules); // Debug log
     } catch (err) {
       console.error('Error applying regex:', err);
     }
   };
 
   const handleSaveFile = async () => {
-    if (!cachedData || !selectedFile || !directoryPath) {
-      console.error('No file selected or no data to save.');
+    if (!cachedData || !selectedFile || !directoryPath || Object.keys(regexRules).length === 0) {
+      console.error('Missing required data for saving.');
       return;
     }
-  
+
     const filePath = `${directoryPath}/${selectedFile}`;
-    console.log(`Saving file to ${filePath}...`); // Debug log
-  
+    console.log(`Saving file to ${filePath}...`);
+
     try {
       await window.api.writeCSV({
         filePath,
         headers: cachedData.headers,
-        data: cachedData.data,
+        regexRules, // Send regex rules to the backend
       });
       console.log(`File saved successfully to ${filePath}`);
-      alert('File saved successfully!');
+     
     } catch (err) {
       console.error('Failed to save file:', err);
-      alert('Failed to save file.');
+      
     }
   };
   

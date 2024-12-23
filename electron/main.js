@@ -362,33 +362,29 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
 
 
 //=================================================================================
-ipcMain.handle('file:writeCSV', async (_, { filePath, headers, data }) => {
+ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => {
   try {
     if (!fullDatasetCache[filePath]) {
       throw new Error('Full dataset is not cached. Unable to save.');
     }
-    //print headers
-    console.log('Headers:', headers);
-    console.log('Data:', data);
 
-    console.log('Writing CSV to: ${filePath}');
-
+    console.log(`Writing CSV to: ${filePath}`);
     console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
 
-    // Apply regex updates to the entire cached dataset
+    // Apply regex rules to the entire cached dataset
     const updatedDataset = fullDatasetCache[filePath].map((row) => {
-      const updatedRow = data.find((previewRow) => {
-        // Match rows based on a unique identifier (e.g., a specific column value)
-        return row[headers[0]] === previewRow[headers[0]];
-      });
-
-      if (updatedRow) {
-        console.log('Merging updated row:', updatedRow);
-        // Merge updated preview row with the original row
-        return { ...row, ...updatedRow };
+      const updatedRow = { ...row };
+      for (const [column, regex] of Object.entries(regexRules)) {
+        if (updatedRow[column]) {
+          try {
+            const regExp = new RegExp(regex, 'g');
+            updatedRow[column] = updatedRow[column].replace(regExp, '');
+          } catch (err) {
+            console.error(`Invalid regex for column "${column}":`, regex, err);
+          }
+        }
       }
-
-      return row; // Keep the original row if no match is found
+      return updatedRow;
     });
 
     // Configure the CSV writer
@@ -407,6 +403,7 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, data }) => {
     throw error;
   }
 });
+
 
 
 

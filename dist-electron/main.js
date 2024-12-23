@@ -281,24 +281,26 @@ ipcMain.handle("file:readCSV", async (_, filePath) => {
     });
   });
 });
-ipcMain.handle("file:writeCSV", async (_, { filePath, headers, data }) => {
+ipcMain.handle("file:writeCSV", async (_, { filePath, headers, regexRules }) => {
   try {
     if (!fullDatasetCache[filePath]) {
       throw new Error("Full dataset is not cached. Unable to save.");
     }
-    console.log("Headers:", headers);
-    console.log("Data:", data);
-    console.log("Writing CSV to: ${filePath}");
+    console.log(`Writing CSV to: ${filePath}`);
     console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
     const updatedDataset = fullDatasetCache[filePath].map((row) => {
-      const updatedRow = data.find((previewRow) => {
-        return row[headers[0]] === previewRow[headers[0]];
-      });
-      if (updatedRow) {
-        console.log("Merging updated row:", updatedRow);
-        return { ...row, ...updatedRow };
+      const updatedRow = { ...row };
+      for (const [column, regex] of Object.entries(regexRules)) {
+        if (updatedRow[column]) {
+          try {
+            const regExp = new RegExp(regex, "g");
+            updatedRow[column] = updatedRow[column].replace(regExp, "");
+          } catch (err) {
+            console.error(`Invalid regex for column "${column}":`, regex, err);
+          }
+        }
       }
-      return row;
+      return updatedRow;
     });
     const csvWriter = createObjectCsvWriter({
       path: filePath,
