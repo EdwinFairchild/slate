@@ -174,13 +174,13 @@ def handle_test_data(test_data, device_ip,output_dir):
                         # Log errors to the CSV
                         csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, "", str(e)])
 
-                    # Wait after the command execution
-                    # if wait_after > 0:
-                    #     time.sleep(wait_after)
+                    #Wait after the command execution
+                    if wait_after > 0:
+                        time.sleep(wait_after)
                 
-                # Wait for the specified interval before the next iteration
-                # if interval > 0:
-                #     time.sleep(interval)
+                #Wait for the specified interval before the next iteration
+                if interval > 0:
+                    time.sleep(interval)
 
             return {
                 "status": "success",
