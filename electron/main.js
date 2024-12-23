@@ -1,13 +1,21 @@
-const { app, BrowserWindow, ipcMain , dialog} = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
 const Store = require('electron-store');
 const store = new Store();
 const fs = require('fs');
+// const fs = require('fs/promises'); // Import the Promises API
+const csvParser = require('csv-parser');
+
+const { createObjectCsvWriter } = require('csv-writer');
+// use stringyfy to convert data to csv
+const { stringify } = require('csv-string');
 // Map to track ongoing tests
 const ongoingTests = new Map();
 const { te } = require('date-fns/locale');
+require('events').defaultMaxListeners = 100;
+const { parse } = require('fast-csv');
 let savedSelectedDevice = null;
 let saveDirectory = null;
 // Keep this in memory as the “cached” list, loaded on app start.
@@ -20,7 +28,7 @@ ipcMain.handle('get-tests', () => {
   saveDirectory = store.get('saveDirectory', null);
   return store.get('tests', []); // default to empty array
 });
-
+//=================================================================================
 ipcMain.handle('save-tests', (_, tests) => {
   store.set('tests', tests);
   // save the savedirectory
@@ -37,7 +45,7 @@ function saveTestsToFile(tests) {
     console.error('Failed to save tests file:', err);
   }
 }
-
+//=================================================================================
 function getTestsFilePath() {
   // e.g. /Users/YourName/Library/Application Support/YourApp/slate-tests.json
   return path.join(app.getPath('userData'), 'slate-tests.json');
@@ -70,7 +78,7 @@ ipcMain.handle('search-devices', async (_, subnet) => {
     pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
   }
 
-  addLog('info',"Resolved Python script path:", pythonScriptPath);
+  addLog('info', "Resolved Python script path:", pythonScriptPath);
 
   try {
     const { stdout } = await new Promise((resolve, reject) => {
@@ -78,7 +86,7 @@ ipcMain.handle('search-devices', async (_, subnet) => {
         `python3 ${pythonScriptPath} --discover "${subnet}"`,
         (error, stdout, stderr) => {
           if (error) {
-            addLog('error','Error running Python script:', stderr);
+            addLog('error', 'Error running Python script:', stderr);
             reject(error);
           } else {
             resolve({ stdout });
@@ -87,10 +95,10 @@ ipcMain.handle('search-devices', async (_, subnet) => {
       );
     });
 
-    addLog('info','Raw Python output:', stdout.trim());
+    addLog('info', 'Raw Python output:', stdout.trim());
     return JSON.parse(stdout.trim()); // Parse JSON response
   } catch (error) {
-    addLog('error','Error executing discovery:', error);
+    addLog('error', 'Error executing discovery:', error);
     return { error: error.message };
   }
 });
@@ -106,7 +114,7 @@ ipcMain.handle('test-command', async (_, command) => {
   addLog("Resolved Python script path:", pythonScriptPath);
 
   if (!savedSelectedDevice || !savedSelectedDevice.address) {
-    addLog('error','No device selected!');
+    addLog('error', 'No device selected!');
     return `Error: No device selected`;
   }
   const ip = savedSelectedDevice.address;
@@ -130,7 +138,7 @@ ipcMain.handle('test-command', async (_, command) => {
     addLog('info', 'Raw Python output:', stdout.trim());
     return stdout.trim(); // Return plain text response
   } catch (error) {
-    addLog('error','Error executing command:', error);
+    addLog('error', 'Error executing command:', error);
     return `Error: ${error.message}`;
   }
 });
@@ -210,11 +218,11 @@ ipcMain.handle('start-test', async (_, testData) => {
         if (code !== 0 && !currentTestId) {
           reject(new Error(`Python script exited with code ${code}`));
         }
-      
+
         if (currentTestId) {
           ongoingTests.delete(currentTestId);
           console.log(`Test ${currentTestId} has been removed from ongoingTests.`);
-      
+
           // If code = 0, we can interpret that as a natural completion
           if (code === 0) {
             // "test-completed" is just an example channel name
@@ -251,8 +259,8 @@ ipcMain.handle('stop-test', async (_, testId) => {
 //=================================================================================
 function createWindow() {
   const iconPath = app.isPackaged
-  ? path.join(process.resourcesPath, 'icons', 'ammeter.png') // Packaged icon path
-  : path.join(__dirname, 'assets/icons/ammeter.png'); // Development icon path
+    ? path.join(process.resourcesPath, 'icons', 'ammeter.png') // Packaged icon path
+    : path.join(__dirname, 'assets/icons/ammeter.png'); // Development icon path
 
   const mainWindow = new BrowserWindow({
     width: 1500,
@@ -277,6 +285,112 @@ function createWindow() {
   }
   mainWindowGlobal = mainWindow;
 }
+//=================================================================================
+ipcMain.handle('dialog:openDirectory', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  });
+
+  if (!canceled) {
+    return new Promise((resolve, reject) => {
+      fs.readdir(filePaths[0], (err, files) => {
+        if (err) {
+          console.error('Failed to read directory:', err);
+          return reject(err);
+        }
+        const csvFiles = files.filter(file => file.endsWith('.csv'));
+        resolve({
+          path: filePaths[0],
+          files: csvFiles
+        });
+      });
+    });
+  }
+  return null;
+});
+//=================================================================================
+let fullDatasetCache = {}; // Cache for full datasets
+ipcMain.handle('file:readCSV', async (_, filePath) => {
+  console.log(`Attempting to read CSV file: ${filePath}`);
+
+  return new Promise((resolve, reject) => {
+    const previewRows = [];
+    let rowCount = 0;
+
+    // Initialize cache for this file
+    fullDatasetCache[filePath] = [];
+
+    fs.createReadStream(filePath)
+      .pipe(
+        parse({
+          headers: true, // Treat the first row as headers
+          quote: '"', // Use double quotes for quoted fields
+          escape: '"', // Escape character for quotes
+          ignoreEmpty: true, // Ignore empty rows
+          relaxQuotes: true, // Allow unbalanced quotes
+          skipLinesWithError: true, // Skip malformed rows
+        })
+      )
+      .on('error', (error) => {
+        console.error('CSV parsing error:', error);
+        reject(error);
+      })
+      .on('data', (row) => {
+        rowCount++;
+
+        if (rowCount % 10000 === 0) {
+          console.log(`Processed ${rowCount} rows so far...`);
+        }
+
+        fullDatasetCache[filePath].push(row);
+
+        if (rowCount <= 50) {
+          previewRows.push(row);
+        }
+      })
+      .on('end', () => {
+        console.log(`CSV parsing completed. Total rows: ${rowCount}`);
+        resolve({
+          headers: Object.keys(previewRows[0] || {}),
+          data: previewRows,
+          totalRows: rowCount,
+        });
+      });
+  });
+});
+
+
+//=================================================================================
+ipcMain.handle('file:writeCSV', async (_, { filePath, headers, data }) => {
+  try {
+    if (!fullDatasetCache[filePath]) {
+      throw new Error('Full dataset is not cached. Unable to save.');
+    }
+
+    console.log(`Writing CSV to: ${filePath}`);
+    console.log(`Cached rows: ${fullDatasetCache[filePath]?.length || 0}`);
+
+    // Update the cached dataset by applying changes to all rows
+    const updatedDataset = fullDatasetCache[filePath].map((row) => {
+      return { ...row, ...data[0] }; // Apply the changes from the single edited row
+    });
+
+    // Configure the CSV writer
+    const csvWriter = createObjectCsvWriter({
+      path: filePath,
+      header: headers.map((header) => ({ id: header, title: header })),
+    });
+
+    // Write the updated dataset back to the file
+    await csvWriter.writeRecords(updatedDataset);
+
+    console.log('File saved successfully.');
+    return true;
+  } catch (error) {
+    console.error('Failed to write CSV:', error);
+    throw error;
+  }
+});
 
 //=================================================================================
 app.whenReady().then(() => {
