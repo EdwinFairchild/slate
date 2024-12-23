@@ -48,22 +48,25 @@ export function AnalyzePage() {
   return (
     <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between">
+      
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">CSV Analysis</h2>
         <Alert
           message="Make a back-up of your original file before you edit!!!"
           type="error" // Alert type for warning (customizable)
         />
-        <button
+       
+      </div>
+      <button
           onClick={handleDirectoryOpen}
           className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <FolderOpen className="h-4 w-4 mr-2" />
           Open Directory
         </button>
-      </div>
-
       <div className="flex flex-1 space-x-4 min-h-0">
+        
         <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3">
+          
           <FileList files={files} selectedFile={selectedFile} onFileSelect={handleFileSelect} />
         </div>
 
