@@ -111,7 +111,7 @@ def send_scpi_command(device_address, command):
         # Decode and return the response
         return response_buffer.value.decode('utf-8')
     except Exception as e:
-        return "No response "
+        return "No response"
 
     finally:
    
@@ -168,7 +168,9 @@ def handle_test_data(test_data, device_ip,output_dir):
                     try:
                         # Send SCPI command
                         response = send_scpi_command(device_ip, cmd_text)
-                        csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, response, ""])
+                        if response == "No response":
+                            continue
+                        csv_writer.writerow([time.strftime('%H:%M:%S'), cmd_text, response, ""])
                         command_status[cmd_text] = True  # Mark as executed
                     except Exception as e:
                         # Log errors to the CSV
