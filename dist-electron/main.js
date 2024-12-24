@@ -24,7 +24,6 @@ ipcMain.handle("get-tests", () => {
 ipcMain.handle("save-tests", (_, tests) => {
   store.set("tests", tests);
   store.set("saveDirectory", saveDirectory);
-  console.log("main.js  Saved tests:", tests);
   return { success: true };
 });
 ipcMain.handle("selectDirectory", async () => {
