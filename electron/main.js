@@ -34,7 +34,7 @@ ipcMain.handle('save-tests', (_, tests) => {
   store.set('tests', tests);
   // save the savedirectory
   store.set('saveDirectory', saveDirectory);
-  console.log('main.js  Saved tests:', tests);
+  // console.log('main.js  Saved tests:', tests);
   return { success: true };
 });
 //=================================================================================
