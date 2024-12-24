@@ -73,19 +73,13 @@ ipcMain.handle('save-selected-device', (_, device) => {
 //=================================================================================
 ipcMain.handle('search-devices', async (_, subnet) => {
   let pythonScriptPath;
-  if (process.platform === 'win32') {
-    if (app.isPackaged) {
-      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-win.py');
-    } else {
-      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-win.py');
-    }
+
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
   } else {
-    if (app.isPackaged) {
-      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
-    } else {
-      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
-    }
+    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
   }
+
 
   addLog('info', "Resolved Python script path:", pythonScriptPath);
 
@@ -114,19 +108,12 @@ ipcMain.handle('search-devices', async (_, subnet) => {
 //=================================================================================
 ipcMain.handle('test-command', async (_, command) => {
   let pythonScriptPath;
-  if (process.platform === 'win32') {
-    if (app.isPackaged) {
-      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-win.py');
-    } else {
-      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-win.py');
-    }
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
   } else {
-    if (app.isPackaged) {
-      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
-    } else {
-      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
-    }
+    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
   }
+
 
   addLog("Resolved Python script path:", pythonScriptPath);
 
@@ -162,19 +149,12 @@ ipcMain.handle('test-command', async (_, command) => {
 //=================================================================================
 ipcMain.handle('start-test', async (_, testData) => {
   let pythonScriptPath;
-  if (process.platform === 'win32') {
-    if (app.isPackaged) {
-      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-win.py');
-    } else {
-      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-win.py');
-    }
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
   } else {
-    if (app.isPackaged) {
-      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
-    } else {
-      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
-    }
+    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
   }
+
 
   if (!savedSelectedDevice || !savedSelectedDevice.address) {
     addLog('error', 'No device selected!');
