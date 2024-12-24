@@ -1,4 +1,4 @@
-import ctypes
+import vxi11
 import uuid
 import os
 import json
@@ -6,119 +6,49 @@ import sys
 import time
 import csv
 import threading
-import pyvisa
-# Dictionary to keep track of active test threads
-active_tests = {}
-# Load the shared library
-# Get the directory of the current script
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Load the shared library using an absolute path
-lib_path = os.path.join(current_dir, "liblxi.so.1.0.0")
-lxi = ctypes.CDLL(lib_path)
-# Define discovery constants
-DISCOVER_VXI11 = 0
-
-# Define the structure for the discovery info
-class LxiInfo(ctypes.Structure):
-    _fields_ = [
-        ("broadcast", ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)),
-        ("device", ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)),
-    ]
-
-# Python callbacks to handle discovered devices
-discovered_devices = []
-
-def broadcast_callback(address, interface):
-    pass
-    #print(f"Broadcasting on interface: {interface.decode()}")
-
-def device_callback(address, idn):
-    device_id = str(uuid.uuid4())  # Generate a unique ID for each device
-    idn_decoded = idn.decode()
-    address_decoded = address.decode()
-    discovered_devices.append({
-        "id": device_id,
-        "name": idn_decoded.split(",")[1] if len(idn_decoded.split(",")) > 1 else "Unknown Device",
-        "address": address_decoded,
-        "type": idn_decoded.split(",")[0] if len(idn_decoded.split(",")) > 0 else "Unknown Type",
-        "isConnected": False,  # Default connection status
-    })
-    #print(f"Found device: {idn_decoded} at {address_decoded}")
-
-# Convert Python callbacks to C function pointers
-BroadcastCallback = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
-DeviceCallback = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
 
 def scan_lxi_devices(subnet):
     """
     Scan the given subnet for LXI devices using the liblxi.so library.
     Returns a list of devices with id, name, address, type, and isConnected.
     """
-    global discovered_devices
-    discovered_devices = []  # Clear the global list for fresh scan
+    ## returns IP
+    instr = vxi11.list_devices()
+    devices = []
+    for device in instr:
+        try:
+            dev = vxi11.Instrument(device)
+            response = dev.ask("*IDN?")
+            devices.append((device, response))
+        except Exception as e:
+            devices.append((device, str(e)))
+    #[('10.0.0.150', 'Siglent Technologies,SDS3034X HD,SDS3HA0Q800623,4.8.9.1.0.3.9'), ('10.0.0.207', 'Siglent Technologies,SDM3055,SDM35GBQ4R0653,1.01.01.20R2')]
+    response  = []
+    # itterate thourgh devices
+    for device in devices:
+        device_id = str(uuid.uuid4())  # Generate a unique ID for each device
+        response.append({
+            "id": device_id,
+            "name": device[1].split(",")[1],
+            "address" : device[0],
+            "type" : "Unknown",
+            "isConnected" : False,
 
-    # Initialize the LXI library
-    lxi.lxi_init()
-
-    # Prepare the discovery info structure
-    info = LxiInfo(
-        broadcast=BroadcastCallback(broadcast_callback),
-        device=DeviceCallback(device_callback),
-    )
-
-    # Perform the discovery
-    timeout = 1000  # 1-second timeout in milliseconds
-    #print(f"Scanning subnet {subnet}.x for LXI devices...")
-    lxi.lxi_discover(ctypes.byref(info), timeout, DISCOVER_VXI11)
-
-    # Return the discovered devices
-    #print(f"Found {len(discovered_devices)} devices.")
-    return discovered_devices
+            })
+    return response
 
 def send_scpi_command(device_address, command):
     """
     Send an SCPI command to the device at the given address.
     Returns the response from the device.
     """
-    timeout = 3000  # Timeout in milliseconds
-    response_size = 65536  # Maximum response size
-    # rm = pyvisa.ResourceManager()
-    # oscilloscope = rm.open_resource(f"TCPIP::{device_address}::INSTR")
-
-
-    # Initialize the LXI library
-    if lxi.lxi_init() != 0:
-        raise RuntimeError("Failed to initialize the LXI library")
-
-    # Connect to the device
-    device = lxi.lxi_connect(device_address.encode('utf-8'), 0, None, timeout, 0)  # Using VXI-11 protocol
-    if device < 0:
-        raise RuntimeError(f"Failed to connect to device at {device_address}")
-
+    response = "NA"
     try:
-
-        # # Send the SCPI command
-        if lxi.lxi_send(device, command.encode('utf-8'), len(command), timeout) < 0:
-            raise RuntimeError(f"Failed to send command: {command}")
-
-        # Receive the response
-        response_buffer = ctypes.create_string_buffer(response_size)
-        received_size = lxi.lxi_receive(device, response_buffer, response_size, timeout)
-        if received_size < 0:
-            raise RuntimeError("Failed to receive response from the device")
-
-        # Decode and return the response
-        return response_buffer.value.decode('utf-8')
+        dev = vxi11.Instrument(device_address)
+        response = dev.ask(command)
+        return response
     except Exception as e:
         return "No response"
-
-    finally:
-   
-        # Disconnect from the device
-
-        lxi.lxi_disconnect(device)
-
 
 def handle_test_data(test_data, device_ip,output_dir):
     """
@@ -178,7 +108,7 @@ def handle_test_data(test_data, device_ip,output_dir):
 
                     #Wait after the command execution
                     if wait_after > 0:
-                        time.sleep(wait_after)
+                        time.sleep(wait_after) 
                 
                 #Wait for the specified interval before the next iteration
                 if interval > 0:
@@ -237,6 +167,7 @@ def stop_test(test_id):
     else:
         return {"status": "error", "message": f"Test {test_id} not found"}
 
+        
 if __name__ == "__main__":
     try:
         if "--ip" in sys.argv and "--command" in sys.argv:
