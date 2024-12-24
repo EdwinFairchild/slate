@@ -30,10 +30,12 @@ export function TestResultsTable({
 
   return (
     <div className="space-y-4">
-      {tests.length === 0 ? (
-        <p className="text-center text-gray-500">No tests available.</p>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    {tests.length === 0 ? (
+      <p className="text-center text-gray-500">No tests available.</p>
+    ) : (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        {/* Scrollable container */}
+        <div className="max-h-[calc(3*64px)] overflow-y-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
@@ -88,7 +90,6 @@ export function TestResultsTable({
                       : 'Running...'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 space-x-2">
-                    {/* Single Remove button */}
                     <button
                       onClick={() => onRemoveTest(test.id, test.status)}
                       className="inline-flex items-center px-3 py-1 border border-transparent text-sm
@@ -105,7 +106,8 @@ export function TestResultsTable({
             </tbody>
           </table>
         </div>
-      )}
-    </div>
+      </div>
+    )}
+  </div>
   );
 }

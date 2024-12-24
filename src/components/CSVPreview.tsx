@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
+export function CSVPreview({ headers, data, onApplyRegex }: CSVPreviewProps) {
+  const [regexInputs, setRegexInputs] = useState<Record<string, string>>(
+    Object.fromEntries(headers.map(header => [header, '']))
+  );
 
-interface CSVPreviewProps {
-  headers: string[];
-  data: Record<string, string>[];
-}
+  const handleRegexChange = (header: string, value: string) => {
+    setRegexInputs(prev => ({ ...prev, [header]: value }));
+  };
 
-export function CSVPreview({ headers, data }: CSVPreviewProps) {
+  const handleApplyRegex = (header: string) => {
+    const regex = regexInputs[header];
+    if (regex) {
+      console.log('Applying regex:', regex, 'to column:', header); // Debug
+      onApplyRegex(header, regex);
+    } else {
+      console.error('No regex entered for column:', header);
+    }
+  };
+
   return (
     <div className="h-full overflow-auto">
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -34,6 +46,27 @@ export function CSVPreview({ headers, data }: CSVPreviewProps) {
               ))}
             </tr>
           ))}
+          <tr>
+            {headers.map(header => (
+              <td key={header} className="px-3 py-2 whitespace-nowrap text-sm">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Enter regex"
+                    value={regexInputs[header]}
+                    onChange={e => handleRegexChange(header, e.target.value)}
+                    className="block w-full px-2 py-1 text-sm border rounded"
+                  />
+                  <button
+                    onClick={() => handleApplyRegex(header)}
+                    className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </td>
+            ))}
+          </tr>
         </tbody>
       </table>
     </div>
