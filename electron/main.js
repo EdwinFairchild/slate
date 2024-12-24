@@ -73,10 +73,18 @@ ipcMain.handle('save-selected-device', (_, device) => {
 //=================================================================================
 ipcMain.handle('search-devices', async (_, subnet) => {
   let pythonScriptPath;
-  if (app.isPackaged) {
-    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+  if (process.platform === 'win32') {
+    if (app.isPackaged) {
+      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-win.py');
+    } else {
+      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-win.py');
+    }
   } else {
-    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+    if (app.isPackaged) {
+      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+    } else {
+      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+    }
   }
 
   addLog('info', "Resolved Python script path:", pythonScriptPath);
@@ -106,10 +114,18 @@ ipcMain.handle('search-devices', async (_, subnet) => {
 //=================================================================================
 ipcMain.handle('test-command', async (_, command) => {
   let pythonScriptPath;
-  if (app.isPackaged) {
-    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+  if (process.platform === 'win32') {
+    if (app.isPackaged) {
+      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-win.py');
+    } else {
+      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-win.py');
+    }
   } else {
-    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+    if (app.isPackaged) {
+      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+    } else {
+      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+    }
   }
 
   addLog("Resolved Python script path:", pythonScriptPath);
@@ -146,11 +162,18 @@ ipcMain.handle('test-command', async (_, command) => {
 //=================================================================================
 ipcMain.handle('start-test', async (_, testData) => {
   let pythonScriptPath;
-
-  if (app.isPackaged) {
-    pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+  if (process.platform === 'win32') {
+    if (app.isPackaged) {
+      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-win.py');
+    } else {
+      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-win.py');
+    }
   } else {
-    pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+    if (app.isPackaged) {
+      pythonScriptPath = path.join(process.resourcesPath, 'python', 'vxi11-api.py');
+    } else {
+      pythonScriptPath = path.join(__dirname, '../src/services/python/vxi11-api.py');
+    }
   }
 
   if (!savedSelectedDevice || !savedSelectedDevice.address) {
@@ -313,7 +336,7 @@ ipcMain.handle('dialog:openDirectory', async () => {
 //=================================================================================
 let fullDatasetCache = {}; // Cache for full datasets
 ipcMain.handle('file:readCSV', async (_, filePath) => {
- 
+
   return new Promise((resolve, reject) => {
     const previewRows = [];
     let rowCount = 0;
