@@ -63,24 +63,23 @@ export function Sidebar({
             <button
               onClick={() => onNavigate('tests')}
               className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'tests'
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
             >
               <Activity className="h-5 w-5 mr-2" />
               Tests
             </button>
             <button
-  onClick={() => onNavigate('analyze')}
-  className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
-    activePage === 'analyze'
-      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-  }`}
->
-  <ChartBarIcon className="h-5 w-5 mr-2" />
-  Analyze
-</button>
+              onClick={() => onNavigate('analyze')}
+              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'analyze'
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+            >
+              <ChartBarIcon className="h-5 w-5 mr-2" />
+              Analyze
+            </button>
           </nav>
         </div>
 
@@ -121,8 +120,8 @@ export function Sidebar({
                   window.api.saveSelectedDevice(device); // If needed
                 }}
                 className={`w-full p-3 rounded-lg text-left transition-colors ${selectedDevice?.id === device.id
-                    ? 'bg-blue-100 dark:bg-blue-900'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-blue-100 dark:bg-blue-900'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
               >
                 <div className="flex items-center justify-between">
@@ -136,8 +135,8 @@ export function Sidebar({
                   </div>
                   <span
                     className={`h-2 w-2 rounded-full ${device.isConnected
-                        ? 'bg-green-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                   />
                 </div>
@@ -156,7 +155,7 @@ export function Sidebar({
           </button>
 
           <a
-            href="https://github.com/your-dummy-repo"
+            href="https://github.com/EdwinFairchild/slate"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
