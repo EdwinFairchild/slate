@@ -39,5 +39,7 @@ contextBridge.exposeInMainWorld(
   offTestCompleted: (callback) => ipcRenderer.off('test-completed', callback),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
   readCSV: (filePath) => ipcRenderer.invoke('file:readCSV', filePath),
-  writeCSV: (params) => ipcRenderer.invoke('file:writeCSV', params)
+  writeCSV: (params) => ipcRenderer.invoke('file:writeCSV', params),
+  generateChart: (params) =>
+    ipcRenderer.invoke('generate-chart', params),
 });

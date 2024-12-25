@@ -1,4 +1,4 @@
-export {};
+export { };
 
 declare global {
   interface Window {
@@ -9,6 +9,7 @@ declare global {
       readCSV: (filePath: string) => Promise<{ headers: string[]; data: Record<string, string>[] }>;
       writeCSV: (params: { filePath: string; headers: string[]; data: Record<string, string>[] }) => Promise<boolean>;
       openDirectory: () => Promise<{ path: string; files: string[] } | null>;
+      generateChart: (filePath: string) => Promise<any>;
     };
   }
 }
