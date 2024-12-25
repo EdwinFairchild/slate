@@ -42,4 +42,5 @@ contextBridge.exposeInMainWorld(
   writeCSV: (params) => ipcRenderer.invoke('file:writeCSV', params),
   generateChart: (params) =>
     ipcRenderer.invoke('generate-chart', params),
+  getTheme: () => localStorage.getItem('theme') || 'light',
 });

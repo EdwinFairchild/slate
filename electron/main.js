@@ -37,11 +37,20 @@ ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
   }
 
   addLog('info', 'Resolved Python script path:', pythonScriptPath);
+  // Retrieve the current theme
+ // Retrieve the current theme from the renderer process
+ const theme = await mainWindowGlobal.webContents.executeJavaScript(`
+  (function() {
+    return localStorage.getItem('theme') || 'light';
+  })();
+`);
+
+console.log('Current theme:', theme);
 
   try {
     const { stdout } = await new Promise((resolve, reject) => {
       exec(
-        `python3 ${pythonScriptPath} "${filePath}" "${xAxis}" "${yAxis}"`,
+        `python3 ${pythonScriptPath} "${filePath}" "${xAxis}" "${yAxis}" "${theme}"`,
         (error, stdout, stderr) => {
           if (error) {
             addLog('error', 'Error running Python script:', stderr);
@@ -65,7 +74,7 @@ ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
         contextIsolation: false, // Allow loading local HTML with Node.js features
       },
     });
-
+    chartWindow.setMenuBarVisibility(false);
     chartWindow.loadFile(htmlPath);
 
     return { success: true, message: `Chart loaded in a new window.` };
@@ -74,8 +83,6 @@ ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
     return { error: error.message };
   }
 });
-
-
 //=================================================================================
 ipcMain.handle('get-tests', () => {
   console.log('main.js got test from store:', store.get('tests', []));
