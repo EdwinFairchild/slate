@@ -19,7 +19,7 @@ export function CSVEditor({
   onGenerateChart,
 }: CSVEditorProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 ">
       <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-4">
           <div className="flex-1">

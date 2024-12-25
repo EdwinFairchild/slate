@@ -38,7 +38,7 @@ export function AnalyzePage() {
       console.error('Both X and Y axes and a file must be selected.');
       return;
     }
-  
+
     try {
       // Invoke the API to generate the chart
       await window.api.generateChart({
@@ -141,7 +141,7 @@ export function AnalyzePage() {
         <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 overflow-y-auto">
           <button
             onClick={handleDirectoryOpen}
-            className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2"
           >
             <FolderOpen className="h-4 w-4 mr-2" />
             Open Directory
@@ -158,7 +158,7 @@ export function AnalyzePage() {
             <div className="flex-1 flex items-center justify-center text-red-600">{error}</div>
           ) : selectedFile && headers.length > 0 ? (
             <>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+              <div>
                 <CSVEditor
                   headers={headers}
                   selectedXAxis={selectedXAxis}
@@ -167,19 +167,19 @@ export function AnalyzePage() {
                   onSelectYAxis={handleSelectYAxis}
                   onGenerateChart={handleGenerateChart}
                 />
+
+
               </div>
               <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 min-h-0">
                 <CSVPreview headers={headers} data={data} onApplyRegex={handleApplyRegex} />
 
               </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={handleSaveFile}
-                  className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  Save File
-                </button>
-              </div>
+              <button
+                onClick={handleSaveFile}
+                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Save changes to file
+              </button>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
