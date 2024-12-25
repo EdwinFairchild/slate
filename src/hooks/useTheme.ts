@@ -8,10 +8,14 @@ export function useTheme() {
       (window.matchMedia('(prefers-color-scheme: light)').matches ? 'dark' : 'light');
   });
 
+  // Update the theme in localStorage and document element class
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  return { theme, setTheme };
+  // Function to get the current theme
+  const getTheme = () => theme;
+
+  return { theme, setTheme, getTheme };
 }

@@ -2,7 +2,7 @@ import argparse
 import csv
 import os
 
-def generate_chart(csv_file, x_column, y_column, output_html):
+def generate_chart(csv_file, x_column, y_column, output_html , theme):
     # Read data from the CSV file
     x_data = []
     y_data = []
@@ -23,7 +23,7 @@ def generate_chart(csv_file, x_column, y_column, output_html):
     html_content = html_content.replace('{{ y_data }}', str(y_data))
     html_content = html_content.replace('{{ x_label }}', x_column)
     html_content = html_content.replace('{{ y_label }}', y_column)
-
+    html_content = html_content.replace('{{ theme }}', theme)  # Inject theme
     # Save the final HTML
     with open(output_html, 'w', encoding='utf-8') as output_file:  # Specify UTF-8 encoding
         output_file.write(html_content)
@@ -35,13 +35,13 @@ if __name__ == "__main__":
     parser.add_argument("csv_file", help="Path to the CSV file")
     parser.add_argument("x_column", help="Column name to be used for the X-axis")
     parser.add_argument("y_column", help="Column name to be used for the Y-axis")
-    
+    parser.add_argument("theme", help="Default Theme to be used for the chart")
     args = parser.parse_args()
 
     output_file = os.path.splitext(args.csv_file)[0] + "_chart.html" 
 
     try:
-        generate_chart(args.csv_file, args.x_column, args.y_column, output_file)
+        generate_chart(args.csv_file, args.x_column, args.y_column, output_file, args.theme)
     except Exception as e:
         print(f"An error occurred: {e}")
         exit(1)

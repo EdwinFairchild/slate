@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Interactive Chart with Theme Switching</title>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+
+    <title>SLATE Chart view</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -81,6 +84,37 @@
             box-sizing: border-box;
         }
 
+        /* Default Light Theme Button Styles */
+        button {
+            background-color: #2563eb;
+            /* Blue-600 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+            /* Blue-700 */
+        }
+
+        /* Dark Theme Button Styles */
+        body.dark button {
+            background-color: #4b5563;
+            /* Gray-600 */
+            color: white;
+        }
+
+        body.dark button:hover {
+            background-color: #374151;
+            /* Gray-700 */
+        }
+
         canvas {
             width: 100%;
             height: 100%;
@@ -99,18 +133,26 @@
     <div class="sidebar">
         <h3>Chart Tools</h3>
         <div class="toolbar">
-            <button id="toggleTheme" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
+            <button id="toggleTheme"
+                class="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
                 <span class="h-4 w-4 mr-2"></span> <!-- Example icon -->
                 Switch to Dark Theme
             </button>
         </div>
         <div class="toolbar">
-            <button id="saveChart" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
+            <button id="resetZoom"
+                class="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
+                🔄 Reset Zoom
+            </button>
+        </div>
+        <div class="toolbar">
+            <button id="saveChart"
+                class="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
                 <span class="h-4 w-4 mr-2">💾</span> <!-- Example icon -->
                 Save as Image
             </button>
         </div>
-        
+
     </div>
 
     <div class="main">
@@ -139,6 +181,10 @@
                 }]
             },
             options: {
+                animation: {
+                    easing: 'linear',
+                    duration: 300, // Animation duration in milliseconds
+                },
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -151,11 +197,20 @@
                     },
                     annotation: {
                         annotations: {}
+                    },
+                    zoom: {
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+
+                            mode: 'xy',
+                        }
                     }
                 },
                 layout: {
-            padding: 15
-        }
+                    padding: 15
+                }
             }
         });
 
@@ -189,7 +244,20 @@
 
             chart.update();
         });
-
+        // Reset Zoom Functionality
+        document.getElementById('resetZoom').addEventListener('click', () => {
+            chart.options.animation = {
+                easing: 'easeOutBounce',
+                duration: 1000, // Animation duration in milliseconds
+            };
+            chart.resetZoom('active'); // Reset without mode-specific zooming
+            // Apply the bounceOut effect
+            chart.update();
+            chart.options.animation = {
+                easing: 'linear',
+                duration: 300, // Animation duration in milliseconds
+            };
+        });
         // Save Chart as Image
         document.getElementById('saveChart').addEventListener('click', () => {
             const canvas = document.getElementById('lineChart');
@@ -197,6 +265,26 @@
             link.download = 'chart.png';
             link.href = canvas.toDataURL('image/png', 1.0); // Ensures full quality
             link.click();
+        });
+
+        // Injected theme from Python
+        const defaultTheme = "{{ theme }}"; // Replace this with "dark" or "light" from Python
+
+        // Apply the theme on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+            const canvas = document.getElementById('lineChart');
+
+            if (defaultTheme === 'dark') {
+                body.classList.add('dark');
+                sidebar.classList.add('dark');
+                canvas.classList.add('dark');
+            } else {
+                body.classList.remove('dark');
+                sidebar.classList.remove('dark');
+                canvas.classList.remove('dark');
+            }
         });
     </script>
 </body>
