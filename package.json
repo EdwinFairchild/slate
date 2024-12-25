@@ -16,6 +16,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "chart.js": "^4.4.7",
+    "chartjs-plugin-zoom": "^2.2.0",
     "csv-parser": "^3.0.0",
     "csv-string": "^4.1.1",
     "csv-stringify": "^6.5.2",

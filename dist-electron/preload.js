@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld(
     openDirectory: () => ipcRenderer.invoke("dialog:openDirectory"),
     readCSV: (filePath) => ipcRenderer.invoke("file:readCSV", filePath),
     writeCSV: (params) => ipcRenderer.invoke("file:writeCSV", params),
-    generateChart: (params) => ipcRenderer.invoke("generate-chart", params)
+    generateChart: (params) => ipcRenderer.invoke("generate-chart", params),
+    getTheme: () => localStorage.getItem("theme") || "light"
   }
 );
