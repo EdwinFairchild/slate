@@ -73,4 +73,7 @@ if __name__ == "__main__":
     parser.add_argument("y_column", help="Column name to be used for the Y-axis")
     args = parser.parse_args()
     
-    generate_chart(args.csv_file, args.x_column, args.y_column)
+    try:
+        generate_chart(args.csv_file, args.x_column, args.y_column)
+    except Exception as e:
+        exit(1)
