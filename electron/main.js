@@ -21,7 +21,61 @@ let savedSelectedDevice = null;
 let saveDirectory = null;
 // Keep this in memory as the “cached” list, loaded on app start.
 let allTests = [];
+let fullDatasetCache = {}; // Cache for full datasets
+let csvFilePath = null;
 let mainWindowGlobal = null;
+
+let chartWindow = null;
+
+ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
+  let pythonScriptPath;
+
+  if (app.isPackaged) {
+    pythonScriptPath = path.join(process.resourcesPath, 'python', 'charts.py');
+  } else {
+    pythonScriptPath = path.join(__dirname, '../src/services/python/charts.py');
+  }
+
+  addLog('info', 'Resolved Python script path:', pythonScriptPath);
+
+  try {
+    const { stdout } = await new Promise((resolve, reject) => {
+      exec(
+        `python3 ${pythonScriptPath} "${filePath}" "${xAxis}" "${yAxis}"`,
+        (error, stdout, stderr) => {
+          if (error) {
+            addLog('error', 'Error running Python script:', stderr);
+            reject(error);
+          } else {
+            resolve({ stdout });
+          }
+        }
+      );
+    });
+
+    const htmlPath = stdout.trim(); // Python script should return the path to the HTML file
+    addLog('info', 'Generated chart HTML path:', htmlPath);
+
+    // Open the generated HTML in a new Electron window
+    const chartWindow = new BrowserWindow({
+      width: 800,
+      height: 600,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false, // Allow loading local HTML with Node.js features
+      },
+    });
+
+    chartWindow.loadFile(htmlPath);
+
+    return { success: true, message: `Chart loaded in a new window.` };
+  } catch (error) {
+    addLog('error', 'Error executing chart generation:', error);
+    return { error: error.message };
+  }
+});
+
+
 //=================================================================================
 ipcMain.handle('get-tests', () => {
   console.log('main.js got test from store:', store.get('tests', []));
@@ -314,7 +368,6 @@ ipcMain.handle('dialog:openDirectory', async () => {
   return null;
 });
 //=================================================================================
-let fullDatasetCache = {}; // Cache for full datasets
 ipcMain.handle('file:readCSV', async (_, filePath) => {
 
   return new Promise((resolve, reject) => {
@@ -353,8 +406,12 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
         }
       })
       .on('end', () => {
-        console.log(`CSV parsing completed. Total rows: ${rowCount}`);
+        csvFilePath = filePath;
+        // console.log(`CSV parsing completed. Total rows: ${rowCount}`);
 
+        // console.log("the file path is:", filePath);
+        //print the csv file for testing
+        //console.log(fullDatasetCache[filePath]);
         resolve({
           headers: Object.keys(previewRows[0] || {}),
           data: previewRows,

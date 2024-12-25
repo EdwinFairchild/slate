@@ -1,90 +1,73 @@
-import React, { useState } from 'react';
-import { Save } from 'lucide-react';
+import React from 'react';
+import { LineChart } from 'lucide-react';
 
 interface CSVEditorProps {
   headers: string[];
-  data: Record<string, string>;
-  onUpdateColumn: (column: string, value: string) => void;
+  selectedXAxis: string | null;
+  selectedYAxis: string | null;
+  onSelectXAxis: (header: string) => void;
+  onSelectYAxis: (header: string) => void;
+  onGenerateChart: () => void;
 }
 
-export function CSVEditor({ headers, data, onUpdateColumn }: CSVEditorProps) {
-  const [editingColumn, setEditingColumn] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState('');
-
-  // Validate and parse data
-  let validData: Record<string, string>;
-  try {
-    validData = typeof data === 'string' ? JSON.parse(data) : data;
-  } catch (err) {
-    console.error('Failed to parse data:', err);
-    validData = {}; // Fallback to empty object
-  }
-
-  const handleEdit = (column: string) => {
-    setEditingColumn(column);
-    setEditValue(validData[column] || ''); // Fallback to empty string
-  };
-
-  const handleSave = () => {
-    if (editingColumn) {
-      onUpdateColumn(editingColumn, editValue);
-      setEditingColumn(null);
-    }
-  };
-
-  // Early exit for invalid data
-  if (!headers || headers.length === 0 || !validData) {
-    return <div className="text-gray-500">No valid data available</div>;
-  }
-
+export function CSVEditor({
+  headers,
+  selectedXAxis,
+  selectedYAxis,
+  onSelectXAxis,
+  onSelectYAxis,
+  onGenerateChart,
+}: CSVEditorProps) {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead>
-          <tr>
-            {headers.map(header => (
-              <th
-                key={header}
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-              >
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {headers.map(header => (
-              <td key={header} className="px-3 py-2 whitespace-nowrap text-sm">
-                {editingColumn === header ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      className="block w-full px-2 py-1 text-sm border rounded"
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSave}
-                      className="p-1 text-green-600 hover:text-green-700"
-                    >
-                      <Save className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleEdit(header)}
-                    className="w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded"
-                  >
-                    {validData[header] ?? 'N/A'} {/* Fallback for missing values */}
-                  </button>
-                )}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              X Axis
+            </label>
+            <select
+              value={selectedXAxis || ''}
+              onChange={(e) => onSelectXAxis(e.target.value)}
+              className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select X Axis</option>
+              {headers.map((header) => (
+                <option key={header} value={header}>
+                  {header}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Y Axis
+            </label>
+            <select
+              value={selectedYAxis || ''}
+              onChange={(e) => onSelectYAxis(e.target.value)}
+              className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select Y Axis</option>
+              {headers.map((header) => (
+                <option key={header} value={header}>
+                  {header}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={onGenerateChart}
+            disabled={!selectedXAxis || !selectedYAxis}
+            className="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <LineChart className="h-5 w-5 mr-2" />
+            Generate Chart
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
