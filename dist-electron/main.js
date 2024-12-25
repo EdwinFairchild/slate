@@ -241,7 +241,7 @@ function createWindow() {
   const iconPath = app.isPackaged ? path.join(process.resourcesPath, "icons", "ammeter.png") : path.join(__dirname, "assets/icons/ammeter.png");
   const mainWindow = new BrowserWindow({
     width: 1500,
-    height: 1025,
+    height: 900,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -260,6 +260,7 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+  mainWindow.setMenuBarVisibility(false);
   mainWindowGlobal = mainWindow;
 }
 ipcMain.handle("dialog:openDirectory", async () => {
@@ -307,7 +308,7 @@ ipcMain.handle("file:readCSV", async (_, filePath) => {
         console.log("Processed ${ rowCount } rows so far...");
       }
       fullDatasetCache[filePath].push(row);
-      if (rowCount <= 10) {
+      if (rowCount <= 7) {
         previewRows.push(row);
       }
     }).on("end", () => {
