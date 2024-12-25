@@ -323,7 +323,7 @@ function createWindow() {
 
   const mainWindow = new BrowserWindow({
     width: 1500,
-    height: 1025,
+    height: 900,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -342,6 +342,8 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+  // hide the menu
+  mainWindow.setMenuBarVisibility(false);
   mainWindowGlobal = mainWindow;
 }
 //=================================================================================
@@ -401,7 +403,7 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
 
         fullDatasetCache[filePath].push(row);
 
-        if (rowCount <= 10) {
+        if (rowCount <= 7) {
           previewRows.push(row);
         }
       })
