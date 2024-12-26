@@ -399,7 +399,7 @@ function createWindow() {
 
   const mainWindow = new BrowserWindow({
     width: 1500,
-    height: 900,
+    height: 950,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
