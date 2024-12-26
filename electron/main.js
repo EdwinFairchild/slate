@@ -492,13 +492,23 @@ app.whenReady().then(() => {
 //=================================================================================
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    cleanupResources();
     app.quit();
   }
 });
 //=================================================================================
 app.on('before-quit', () => {
+  cleanupResources();
+});
+//=================================================================================
+function cleanupResources() {
   ongoingTests.forEach((childProcess, testId) => {
     console.log(`Terminating test: ${testId}`);
-    childProcess.kill(); // Gracefully terminate the process
+    try {
+      childProcess.kill('SIGKILL'); // Forcefully terminate if necessary
+    } catch (error) {
+      console.error(`Failed to terminate test: ${testId}`, error);
+    }
   });
-});
+  ongoingTests.clear();
+}
