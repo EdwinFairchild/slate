@@ -45,6 +45,7 @@ def send_scpi_command(device_address, command):
     response = "NA"
     try:
         dev = vxi11.Instrument(device_address)
+        dev.timeout = 1.5 # TODO: Make this configurable
         response = dev.ask(command)
         return response
     except Exception as e:
