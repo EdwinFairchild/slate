@@ -43,4 +43,14 @@ contextBridge.exposeInMainWorld(
   generateChart: (params) =>
     ipcRenderer.invoke('generate-chart', params),
   getTheme: () => localStorage.getItem('theme') || 'light',
+  getTestDuration: async (testId) => ipcRenderer.invoke('get-test-duration', testId), // Exposed method
+  on: (channel, callback) => {
+    const validChannels = ['test-completed']; // Add other channels if necessary
+    if (validChannels.includes(channel)) {
+      ipcRenderer.on(channel, (event, ...args) => callback(...args));
+    }
+  },
+  removeListener: (channel, callback) => {
+    ipcRenderer.removeListener(channel, callback);
+  },
 });

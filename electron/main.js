@@ -13,7 +13,10 @@ const { createObjectCsvWriter } = require('csv-writer');
 
 const { stringify } = require('csv-stringify');
 // Map to track ongoing tests
-const ongoingTests = new Map();
+// Initialize Maps
+const ongoingTests = new Map(); // Map<testId, TestInfo>
+const completedTests = new Map(); // Map<testId, TestInfo>
+
 const { te } = require('date-fns/locale');
 require('events').defaultMaxListeners = 100;
 const { parse } = require('fast-csv');
@@ -27,6 +30,19 @@ let mainWindowGlobal = null;
 
 let chartWindow = null;
 
+ipcMain.handle('get-test-duration', async (_, testId) => {
+  let testInfo = ongoingTests.get(testId);
+  if (!testInfo) {
+    testInfo = completedTests.get(testId);
+  }
+
+  if (testInfo) {
+    console.log('------------Test duration:', testInfo.duration);
+    return testInfo.duration; // Duration in minutes
+  } else {
+    throw new Error('Test not found');
+  }
+});
 ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
   let pythonScriptPath;
 
@@ -38,14 +54,14 @@ ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
 
   addLog('info', 'Resolved Python script path:', pythonScriptPath);
   // Retrieve the current theme
- // Retrieve the current theme from the renderer process
- const theme = await mainWindowGlobal.webContents.executeJavaScript(`
+  // Retrieve the current theme from the renderer process
+  const theme = await mainWindowGlobal.webContents.executeJavaScript(`
   (function() {
     return localStorage.getItem('theme') || 'light';
   })();
 `);
 
-console.log('Current theme:', theme);
+  console.log('Current theme:', theme);
 
   try {
     const { stdout } = await new Promise((resolve, reject) => {
@@ -85,7 +101,7 @@ console.log('Current theme:', theme);
 });
 //=================================================================================
 ipcMain.handle('get-tests', () => {
-  console.log('main.js got test from store:', store.get('tests', []));
+  // console.log('main.js got test from store:', store.get('tests', []));
   // get the savedirectory
   saveDirectory = store.get('saveDirectory', null);
   return store.get('tests', []); // default to empty array
@@ -242,7 +258,6 @@ ipcMain.handle('start-test', async (_, testData) => {
       '--savedir',
       saveDirectory,
     ]);
-    // console.log("Data was the following:", testData);
 
     // Generate a unique test ID
     const testId = crypto.randomUUID();
@@ -255,15 +270,30 @@ ipcMain.handle('start-test', async (_, testData) => {
           const parsedData = JSON.parse(data.toString().trim());
           if (parsedData.status === 'running' && !currentTestId) {
             currentTestId = parsedData.test_id || testId; // Store the test_id
-            ongoingTests.set(currentTestId, childProcess);
 
-            // Resolve immediately with the initial response
+            // Create the TestInfo object
+            const testInfo = {
+              childProcess,
+              name: testData.name,
+              duration: testData.duration, // Duration in minutes
+              startTime,
+              logFilePath: parsedData.log_file_path,
+              status: 'running',
+            };
+
+            // **Add this log to verify duration**
+            console.log('Storing TestInfo:', testInfo);
+
+            // Store in ongoingTests
+            ongoingTests.set(currentTestId, testInfo);
+
+            // Resolve with initial test details
             resolve({
               id: currentTestId,
               name: testData.name,
               duration: testData.duration,
               startTime,
-              endTime: null, // Will be updated later
+              endTime: null,
               status: 'running',
               logFilePath: parsedData.log_file_path,
             });
@@ -281,26 +311,40 @@ ipcMain.handle('start-test', async (_, testData) => {
       });
 
       childProcess.on('close', (code) => {
+        console.log(`Python process closed with code ${code}`);
         if (code !== 0 && !currentTestId) {
           reject(new Error(`Python script exited with code ${code}`));
         }
 
         if (currentTestId) {
-          ongoingTests.delete(currentTestId);
-          console.log(`Test ${currentTestId} has been removed from ongoingTests.`);
+          const testInfo = ongoingTests.get(currentTestId);
+          if (testInfo) {
+            testInfo.status = code === 0 ? 'completed' : 'failed';
+            testInfo.endTime = new Date().toISOString();
 
-          // If code = 0, we can interpret that as a natural completion
-          if (code === 0) {
-            // "test-completed" is just an example channel name
-            mainWindowGlobal.webContents.send('test-completed', {
-              testId: currentTestId,
+            // Move to completedTests
+            ongoingTests.delete(currentTestId);
+            completedTests.set(currentTestId, testInfo);
+
+            console.log(`Test ${currentTestId} has been moved to completedTests.`);
+
+            // Notify renderer process
+            BrowserWindow.getAllWindows().forEach((window) => {
+              window.webContents.send('test-completed', {
+                testId: currentTestId,
+                status: testInfo.status,
+                endTime: testInfo.endTime,
+              });
             });
+          } else {
+            console.error(`Test Info for Test ID ${currentTestId} not found.`);
           }
         }
       });
     });
 
     const initialResult = await resultPromise;
+    console.log('Initial Test Result:', initialResult);
     return initialResult;
   } catch (error) {
     addLog('error', 'Error executing start-test:', error);
@@ -390,8 +434,8 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
       .pipe(
         parse({
           headers: true, // Treat the first row as headers
-          // quote: '"', // Use double quotes for quoted fields
-          // escape: '"', // Escape character for quotes
+          quote: '"', // Use double quotes for quoted fields
+          escape: '"', // Escape character for quotes
           // ignoreEmpty: true, // Ignore empty rows
           // relaxQuotes: true, // Allow unbalanced quotes
           // skipLinesWithError: true, // Skip malformed rows
@@ -457,6 +501,9 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
       return updatedRow;
     });
 
+    // make the fullDatasetCache be same as the updatedDataset
+    fullDatasetCache[filePath] = updatedDataset;
+
     // Configure the CSV writer
     const csvWriter = createObjectCsvWriter({
       path: filePath,
@@ -473,11 +520,6 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
     throw error;
   }
 });
-
-
-
-
-
 //=================================================================================
 app.whenReady().then(() => {
   createWindow();

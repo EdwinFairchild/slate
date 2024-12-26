@@ -1,3 +1,4 @@
+// global.d.ts
 export { };
 
 declare global {
@@ -10,15 +11,21 @@ declare global {
       writeCSV: (params: { filePath: string; headers: string[]; data: Record<string, string>[] }) => Promise<boolean>;
       openDirectory: () => Promise<{ path: string; files: string[] } | null>;
       generateChart: (filePath: string) => Promise<any>;
+      getTestDuration: (testId: string) => Promise<number>; // Added method
+      // Optionally, add event listeners if needed
+      on: (channel: string, callback: (...args: any[]) => void) => void;
+      removeListener: (channel: string, callback: (...args: any[]) => void) => void;
     };
   }
 }
+
 interface Device {
   id: string;
   name: string;
   address: string;
   isConnected: boolean;
 }
+
 interface Command {
   command: string;
   runOnce: boolean;
@@ -28,7 +35,7 @@ interface Command {
 interface Test {
   id: string;
   name: string;
-  duration: number;
+  duration: number; // User-specified duration in minutes (e.g., 0.5 for 30 seconds)
   interval: number;
   chainCommands: boolean;
   commands: Command[];
