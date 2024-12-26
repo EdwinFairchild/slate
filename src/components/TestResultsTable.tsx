@@ -1,19 +1,19 @@
-// TestResultsTable.tsx
 import React from 'react';
 import { format } from 'date-fns';
 import { Activity, XCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import type { TestResult } from '../types/test';
-import Timer from './Timer'; // Ensure you have this component
+import Timer from './Timer';
 
 interface TestResultsTableProps {
   tests: TestResult[];
   onRemoveTest: (testId: string, status: string) => void;
 }
 
-export function TestResultsTable({
+// Rename the internal component to avoid naming conflict
+const TestResultsTableComponent: React.FC<TestResultsTableProps> = ({
   tests,
   onRemoveTest,
-}: TestResultsTableProps) {
+}) => {
   const getStatusIcon = (status: TestResult['status']) => {
     switch (status) {
       case 'running':
@@ -33,7 +33,6 @@ export function TestResultsTable({
         <p className="text-center text-gray-500">No tests available.</p>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          {/* Scrollable container */}
           <div className="max-h-[calc(3*64px)] overflow-y-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
@@ -119,4 +118,7 @@ export function TestResultsTable({
       )}
     </div>
   );
-}
+};
+
+// Export the memoized version with the original name
+export const TestResultsTable = React.memo(TestResultsTableComponent);

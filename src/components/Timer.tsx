@@ -1,5 +1,7 @@
-// Timer.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
+
+// Cache for storing processed test IDs
+const processedTests = new Set<string>();
 
 interface TimerProps {
   testId: string;
@@ -13,11 +15,20 @@ const Timer: React.FC<TimerProps> = ({ testId, startTime, status }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch the user-specified duration from the main process
+    // Check if this test has already been processed
+    if (processedTests.has(testId)) {
+      console.log(`Test ID ${testId} has already been processed.`);
+      return;
+    }
+
     const fetchDuration = async () => {
       try {
+        console.log(`Fetching duration for Test ID: ${testId}`);
         const durationInMinutes = await window.api.getTestDuration(testId);
         setDuration(durationInMinutes * 60); // Convert to seconds
+
+        // Mark this test as processed
+        processedTests.add(testId);
       } catch (err) {
         setError('Failed to fetch duration');
         console.error(err);
@@ -77,4 +88,12 @@ const Timer: React.FC<TimerProps> = ({ testId, startTime, status }) => {
   );
 };
 
-export default Timer;
+// Wrap the Timer component in React.memo
+export default memo(Timer, (prevProps, nextProps) => {
+  // Prevent re-renders if props have not changed
+  return (
+    prevProps.testId === nextProps.testId &&
+    prevProps.startTime === nextProps.startTime &&
+    prevProps.status === nextProps.status
+  );
+});

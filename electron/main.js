@@ -330,12 +330,16 @@ ipcMain.handle('start-test', async (_, testData) => {
 
             // Notify renderer process
             // BrowserWindow.getAllWindows().forEach((window) => {
+            if (code === 0) {
+              // "test-completed" is just an example channel name
+              console.log(`Emitting test-completed for Test ID: ${currentTestId}`);
               mainWindowGlobal.webContents.send('test-completed', {
                 testId: currentTestId,
                 status: testInfo.status,
                 endTime: testInfo.endTime,
               });
-            // });
+            }
+
           } else {
             // pass
 
