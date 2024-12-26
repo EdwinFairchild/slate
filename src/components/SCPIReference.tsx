@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Search, Copy, Check } from 'lucide-react';
 import { useDevice } from '../components/DeviceContext';
 interface SCPICommand {
@@ -18,11 +18,11 @@ const scpiCommands: SCPICommand[] = [
     command: '*RST',
     description: 'Reset the device to default settings'
   },
-  // {
-  //   category: 'Measurement',
-  //   command: 'CYMOMETER?',
-  //   description: 'Read Freq. Counter'
-  // },
+  {
+    category: 'Measurement',
+    command: 'C1:PAVA? FREQ?',
+    description: 'Read Freq of ch:1'
+  },
   // {
   //   category: 'Measurement',
   //   command: 'C1:BSWV?',
