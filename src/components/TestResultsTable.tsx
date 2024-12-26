@@ -52,9 +52,9 @@ const TestResultsTableComponent: React.FC<TestResultsTableProps> = ({
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Start Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Duration
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Remaining Time
                   </th>
@@ -81,7 +81,7 @@ const TestResultsTableComponent: React.FC<TestResultsTableProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {format(new Date(test.startTime), 'MMM d, HH:mm:ss')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {test.endTime
                         ? `${Math.round(
                           (new Date(test.endTime).getTime() -
@@ -89,7 +89,7 @@ const TestResultsTableComponent: React.FC<TestResultsTableProps> = ({
                           1000
                         )}s`
                         : 'Running...'}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       <Timer
                         testId={test.id}
