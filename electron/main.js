@@ -282,7 +282,7 @@ ipcMain.handle('start-test', async (_, testData) => {
             };
 
             // **Add this log to verify duration**
-            console.log('Storing TestInfo:', testInfo);
+            // console.log('Storing TestInfo:', testInfo);
 
             // Store in ongoingTests
             ongoingTests.set(currentTestId, testInfo);
@@ -329,14 +329,16 @@ ipcMain.handle('start-test', async (_, testData) => {
             console.log(`Test ${currentTestId} has been moved to completedTests.`);
 
             // Notify renderer process
-            BrowserWindow.getAllWindows().forEach((window) => {
-              window.webContents.send('test-completed', {
+            // BrowserWindow.getAllWindows().forEach((window) => {
+              mainWindowGlobal.webContents.send('test-completed', {
                 testId: currentTestId,
                 status: testInfo.status,
                 endTime: testInfo.endTime,
               });
-            });
+            // });
           } else {
+            // pass
+
             console.error(`Test Info for Test ID ${currentTestId} not found.`);
           }
         }
@@ -360,12 +362,31 @@ ipcMain.handle('stop-test', async (_, testId) => {
     };
   }
 
-  const childProcess = ongoingTests.get(testId);
-  childProcess.kill();
-  ongoingTests.delete(testId);
+  const testInfo = ongoingTests.get(testId);
+  const childProcess = testInfo.childProcess;
 
-  return { status: 'success', message: `Test ${testId} stopped.` };
+  // Debugging logs
+  console.log(`Attempting to kill test ${testId}:`, childProcess);
+  console.log(`Type of childProcess.kill: ${typeof childProcess.kill}`);
+
+  if (typeof childProcess.kill !== 'function') {
+    return {
+      status: 'error',
+      message: `Cannot kill test ${testId} because childProcess.kill is not a function.`,
+    };
+  }
+
+  try {
+    childProcess.kill();
+    ongoingTests.delete(testId);
+
+    return { status: 'success', message: `Test ${testId} stopped.` };
+  } catch (error) {
+    console.error(`Failed to kill test ${testId}:`, error);
+    return { status: 'error', message: `Failed to stop test ${testId}: ${error.message}` };
+  }
 });
+
 //=================================================================================
 function createWindow() {
   const iconPath = app.isPackaged

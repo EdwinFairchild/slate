@@ -85,10 +85,10 @@ export function TestResultsTable({
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {test.endTime
                         ? `${Math.round(
-                            (new Date(test.endTime).getTime() -
-                              new Date(test.startTime).getTime()) /
-                              1000
-                          )}s`
+                          (new Date(test.endTime).getTime() -
+                            new Date(test.startTime).getTime()) /
+                          1000
+                        )}s`
                         : 'Running...'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

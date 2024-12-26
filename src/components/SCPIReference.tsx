@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Search, Copy, Check } from 'lucide-react';
 import { useDevice } from '../components/DeviceContext';
 interface SCPICommand {

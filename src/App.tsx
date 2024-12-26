@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sun, Moon, Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 // import { DeviceStatus } from './components/DeviceStatus';
@@ -31,15 +31,17 @@ export default function App() {
   // Listen for "test-completed" from main process
   useEffect(() => {
     const handleTestCompleted = (_event: any, data: { testId: string }) => {
+      console.log(`handleTestCompleted triggered for Test ID: ${data.testId}`);
+
       // Mark that test as completed
       setTests((prevTests) =>
         prevTests.map((t) =>
           t.id === data.testId
             ? {
-                ...t,
-                status: 'completed',
-                endTime: new Date().toISOString(),
-              }
+              ...t,
+              status: 'completed',
+              endTime: new Date().toISOString(),
+            }
             : t
         )
       );
@@ -47,11 +49,14 @@ export default function App() {
     };
 
     window.api.onTestCompleted(handleTestCompleted);
+    console.log('Attached handleTestCompleted listener.');
 
     return () => {
       window.api.offTestCompleted(handleTestCompleted);
+      console.log('Detached handleTestCompleted listener.');
     };
-  }, [addLog]);
+  }, [addLog]); // Now, addLog is stable due to useCallback
+
 
   // Start test
   const handleStartTest = async (
@@ -122,7 +127,7 @@ export default function App() {
       const response = await window.api.stopTest(testId);
       if (response.status !== 'success') {
         addLog('error', `Failed to stop test ${testId}: ${response.message}`);
-        return; 
+        return;
       }
     }
     // Now remove from state
@@ -167,9 +172,8 @@ export default function App() {
       />
 
       <div
-        className={`transition-all duration-300 ${
-          isSidebarOpen ? 'ml-64' : 'ml-0'
-        } ${isLogsOpen ? 'mr-64' : 'mr-0'}`}
+        className={`transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'
+          } ${isLogsOpen ? 'mr-64' : 'mr-0'}`}
       >
         <div className="container mx-auto px-4 py-8 h-screen flex flex-col">
           <div className="flex justify-between items-center mb-8">
