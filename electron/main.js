@@ -106,7 +106,27 @@ ipcMain.handle('get-tests', () => {
   saveDirectory = store.get('saveDirectory', null);
   return store.get('tests', []); // default to empty array
 });
-//=================================================================================
+ipcMain.handle('get-save-directory', async () => {
+  // Assume you have a stored directory path (e.g., in a config file or localStorage)
+  const savedPath = store.get('saveDirectory', null);
+
+  if (savedPath) {
+    return new Promise((resolve, reject) => {
+      fs.readdir(savedPath, (err, files) => {
+        if (err) {
+          return reject(err);
+        }
+        const csvFiles = files.filter(file => file.endsWith('.csv'));
+        resolve({
+          path: savedPath,
+          files: csvFiles
+        });
+      });
+    });
+  }
+  return null; // If no saved path exists
+});
+//=========================================================================
 ipcMain.handle('save-tests', (_, tests) => {
   store.set('tests', tests);
   // save the savedirectory
@@ -137,6 +157,7 @@ ipcMain.handle('selectDirectory', async () => {
     return null;
   }
   saveDirectory = filePaths[0];
+  store.set('saveDirectory', saveDirectory);
   return filePaths[0];
 });
 //=================================================================================

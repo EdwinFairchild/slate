@@ -7,7 +7,7 @@ import { useCSVData } from '../hooks/useCSVData';
 import { useDevice } from '../components/DeviceContext';
 import { useAnalyzePage } from '../components/AnalyzePageContext';
 import { Alert } from '../components/ui/Alert';
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { toast } from 'react-toastify';
 export function AnalyzePage() {
   const {
@@ -132,6 +132,22 @@ export function AnalyzePage() {
     }
   };
 
+  // Automatically fetch and open the save directory on load
+  useEffect(() => {
+    const fetchDirectory = async () => {
+      try {
+        const directory = await window.api.getSaveDirectory();
+        if (directory) {
+          setDirectoryPath(directory.path);
+          setFiles(directory.files);
+        }
+      } catch (error) {
+        addLog('error', 'Failed to fetch save directory:', error);
+      }
+    };
+
+    fetchDirectory();
+  }, [setDirectoryPath, setFiles, addLog]);
   return (
     <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between">
