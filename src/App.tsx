@@ -11,7 +11,7 @@ import { useTheme } from './hooks/useTheme';
 import { TestResultsTable } from './components/TestResultsTable';
 import type { SCPICommand, Device, LogMessage, Page } from './types';
 import type { TestResult } from './types/test';
-import { toast, ToastContainer, Flip, Bounce, Zoom } from 'react-toastify';
+import { toast, ToastContainer, Flip, Bounce, Zoom , Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
@@ -47,6 +47,7 @@ export default function App() {
         )
       );
       addLog('info', `Test ${data.testId} completed naturally.`);
+      toast.success(`Test ${data.testId} completed.`);
     };
 
     window.api.onTestCompleted(handleTestCompleted);
@@ -209,7 +210,7 @@ export default function App() {
               </button>
             </div>
           </div>
-          <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'} autoClose={2000} position="top-center" transition={Bounce} />
+          <ToastContainer theme={theme === 'dark' ? 'light' : 'dark'} autoClose={1700} position="bottom-right" transition={Bounce} />
           {/* <main className="mb-8">
             <DeviceStatus />
           </main> */}
@@ -219,6 +220,7 @@ export default function App() {
           </div>
 
           <div className="mt-6">
+            
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
               Test Results
             </h2>
