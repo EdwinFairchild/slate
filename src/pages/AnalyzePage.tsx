@@ -7,7 +7,7 @@ import { useCSVData } from '../hooks/useCSVData';
 import { useDevice } from '../components/DeviceContext';
 import { useAnalyzePage } from '../components/AnalyzePageContext';
 import { Alert } from '../components/ui/Alert';
-import React, { useState , useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 export function AnalyzePage() {
   const {
@@ -31,6 +31,8 @@ export function AnalyzePage() {
     setCachedData
   );
   const [regexRules, setRegexRules] = useState({}); // Add state for regex rules
+  const [regexHistory, setRegexHistory] = useState({});
+
   // Existing imports...
   const [chartData, setChartData] = useState<ChartData<'line'> | null>(null);
 
@@ -64,6 +66,8 @@ export function AnalyzePage() {
   const handleApplyRegex = (header: string, regex: string) => {
     try {
       const regExp = new RegExp(regex, 'g');
+      const previousColumnData = cachedData?.data.map(row => row[header]) || []; // Save previous state
+
       const newData = cachedData?.data.map(row => ({
         ...row,
         [header]: row[header]?.replace(regExp, ''),
@@ -71,24 +75,76 @@ export function AnalyzePage() {
 
       setCachedData({ headers, data: newData });
 
-      // Update regex rules state
-      setRegexRules(prevRules => ({
-        ...prevRules,
-        [header]: regex,
-      }));
+      // Update regex history
+      setRegexHistory(prevHistory => {
+        const columnHistory = prevHistory[header] || { current: null, history: [] };
 
-      addLog('info', 'Updated cached data:', newData); // Debug log
-      addLog('info', 'Updated regex rules:', regexRules); // Debug log
+        return {
+          ...prevHistory,
+          [header]: {
+            current: regex,
+            history: [
+              {
+                regex,
+                previousState: previousColumnData,
+              },
+              ...columnHistory.history,
+            ].slice(0, 10), // Limit history to 10 entries
+          }
+        };
+      });
+
+      addLog('info', `Applied regex '${regex}' on column '${header}'.`);
     } catch (err) {
       addLog('error', 'Error applying regex:', err);
     }
   };
 
+  const handleUndoRegex = (header: string) => {
+    setRegexHistory(prevHistory => {
+      const columnHistory = prevHistory[header];
+
+      if (!columnHistory || columnHistory.history.length === 0) {
+        addLog('info', `No regex history to undo for column '${header}'.`);
+        return prevHistory;
+      }
+
+      const [lastCommand, ...newHistory] = columnHistory.history; // Get the last command
+      const { previousState } = lastCommand;                     // Extract the previous state
+
+      // Revert column to its previous state
+      const newData = cachedData?.data.map((row, index) => ({
+        ...row,
+        [header]: previousState[index], // Restore previous state for the column
+      })) || [];
+
+      setCachedData({ headers, data: newData });
+
+      addLog('info', `Undid regex '${lastCommand.regex}' for column '${header}'.`);
+
+      return {
+        ...prevHistory,
+        [header]: {
+          current: newHistory[0]?.regex || null, // Update current regex
+          history: newHistory,
+        },
+      };
+    });
+  };
+
   const handleSaveFile = async () => {
-    if (!cachedData || !selectedFile || !directoryPath || Object.keys(regexRules).length === 0) {
-      addLog('error', 'Missing required data for saving.(file or directory path) or no chagnes to save');
+    if (!cachedData || !selectedFile || !directoryPath || Object.keys(regexHistory).length === 0) {
+      addLog('error', 'Missing required data for saving.');
       return;
     }
+
+    // Prepare regexRules by extracting the history for each column
+    const regexRules = Object.entries(regexHistory).reduce((acc, [header, history]) => {
+      acc[header] = history.history.map(entry => entry.regex); // Extract regex list for each column
+      return acc;
+    }, {});
+
+    console.log('Prepared regexRules:', regexRules);
 
     const filePath = `${directoryPath}/${selectedFile}`;
     addLog('info', `Saving file to ${filePath}...`);
@@ -97,18 +153,15 @@ export function AnalyzePage() {
       await window.api.writeCSV({
         filePath,
         headers: cachedData.headers,
-        regexRules, // Send regex rules to the backend
+        regexRules,
       });
       addLog('info', `File saved successfully to ${filePath}`);
       toast.success('File saved successfully!');
-      //cleasr regex rules
-      setRegexRules({});
-
     } catch (err) {
       addLog('error', 'Failed to save file:', err);
-
     }
   };
+
 
 
   const handleDirectoryOpen = async () => {
@@ -191,12 +244,18 @@ export function AnalyzePage() {
 
               </div>
               <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 min-h-0">
-                <CSVPreview headers={headers} data={data} onApplyRegex={handleApplyRegex} />
+                <CSVPreview
+                  headers={headers}
+                  data={data}
+                  onApplyRegex={handleApplyRegex}
+                  onUndoRegex={handleUndoRegex} // Pass the undo function
+                />
 
               </div>
+
               <button
                 onClick={handleSaveFile}
-                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-700"
               >
                 Save changes to file
               </button>

@@ -523,27 +523,53 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
       throw new Error('Full dataset is not cached. Unable to save.');
     }
 
-    //console.log(`Writing CSV to: ${filePath}`);
-    //console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
+    console.log(`Starting to write CSV to: ${filePath}`);
+    console.log(`Headers: ${JSON.stringify(headers)}`);
+    console.log(`Regex rules: ${JSON.stringify(regexRules)}`);
+
+    // Ensure regexRules is in the expected format
+    if (typeof regexRules !== 'object' || !regexRules) {
+      throw new Error('Invalid regexRules format. Expected an object.');
+    }
 
     // Apply regex rules to the entire cached dataset
-    const updatedDataset = fullDatasetCache[filePath].map((row) => {
+    console.log('Applying regex rules to the dataset...');
+    const updatedDataset = fullDatasetCache[filePath].map((row, rowIndex) => {
       const updatedRow = { ...row };
-      for (const [column, regex] of Object.entries(regexRules)) {
+      console.log(`Original row ${rowIndex}: ${JSON.stringify(row)}`);
+
+      for (const [column, regexList] of Object.entries(regexRules)) {
+        if (!Array.isArray(regexList)) {
+          console.error(`Invalid regex list for column "${column}":`, regexList);
+          continue;
+        }
+
         if (updatedRow[column]) {
+          console.log(`Processing column "${column}" with value "${updatedRow[column]}"`);
           try {
-            const regExp = new RegExp(regex, 'g');
-            updatedRow[column] = updatedRow[column].replace(regExp, '');
+            regexList.forEach((regex, regexIndex) => {
+              console.log(`Applying regex ${regexIndex}: "${regex}"`);
+              const regExp = new RegExp(regex, 'g');
+              updatedRow[column] = updatedRow[column].replace(regExp, '');
+              console.log(`Updated value for column "${column}": "${updatedRow[column]}"`);
+            });
           } catch (err) {
-            //console.error(`Invalid regex for column "${column}":`, regex, err);
+            console.error(`Error applying regex for column "${column}":`, err);
           }
+        } else {
+          console.log(`Skipping column "${column}" as it does not exist in the current row.`);
         }
       }
+
+      console.log(`Updated row ${rowIndex}: ${JSON.stringify(updatedRow)}`);
       return updatedRow;
     });
 
-    // make the fullDatasetCache be same as the updatedDataset
+    console.log('Finished applying regex rules.');
+
+    // Update the cache with the modified dataset
     fullDatasetCache[filePath] = updatedDataset;
+    console.log(`Cache updated for file: ${filePath}`);
 
     // Configure the CSV writer
     const csvWriter = createObjectCsvWriter({
@@ -552,15 +578,18 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
     });
 
     // Write the updated dataset back to the file
+    console.log('Writing updated dataset to file...');
     await csvWriter.writeRecords(updatedDataset);
+    console.log(`File saved successfully at: ${filePath}`);
 
-    //console.log('File saved successfully.');
     return true;
   } catch (error) {
-    //console.error('Failed to write CSV:', error);
+    console.error('Failed to write CSV:', error);
     throw error;
   }
 });
+
+
 //=================================================================================
 app.whenReady().then(() => {
   createWindow();
