@@ -495,7 +495,7 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
 
         fullDatasetCache[filePath].push(row);
 
-        if (rowCount <= 7) {
+        if (rowCount <= 5) {
           previewRows.push(row);
         }
       })

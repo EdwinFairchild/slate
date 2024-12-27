@@ -255,7 +255,7 @@ export function AnalyzePage() {
 
               <button
                 onClick={handleSaveFile}
-                className="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-700"
+                className="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-blue-700"
               >
                 Save changes to file
               </button>
