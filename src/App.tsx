@@ -11,7 +11,7 @@ import { useTheme } from './hooks/useTheme';
 import { TestResultsTable } from './components/TestResultsTable';
 import type { SCPICommand, Device, LogMessage, Page } from './types';
 import type { TestResult } from './types/test';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast, ToastContainer, Flip, Bounce, Zoom } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
@@ -209,7 +209,7 @@ export default function App() {
               </button>
             </div>
           </div>
-          <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'}  position="top-center" />
+          <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'} autoClose={2000} position="top-center" transition={Bounce} />
           {/* <main className="mb-8">
             <DeviceStatus />
           </main> */}
