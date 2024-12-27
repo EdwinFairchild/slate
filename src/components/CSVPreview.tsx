@@ -71,7 +71,7 @@ export function CSVPreview({ headers, data, onApplyRegex, onUndoRegex }: CSVPrev
                     placeholder="regex"
                     value={regexInputs[header]}
                     onChange={e => handleRegexChange(header, e.target.value)}
-                    className="block w-full px-2 py-1 text-sm border rounded"
+                     className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
                   />
                   {/* Apply Button */}
                   <button
@@ -84,7 +84,7 @@ export function CSVPreview({ headers, data, onApplyRegex, onUndoRegex }: CSVPrev
                   {/* Undo Button */}
                     <button
                     onClick={() => handleUndoRegex(header)}
-                    className="mt-2 w-full px-2 py-1 text-sm bg-gray-400 text-white rounded hover:bg-blue-700"
+                    className="mt-2 w-full px-2 py-1 text-sm bg-gray-400 dark:bg-gray-600 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-700 transition" // Adjust width for the first column
                     >
                     Undo
                     </button>

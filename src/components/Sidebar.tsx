@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDevice } from './DeviceContext';
-import { ChartBarIcon } from '@heroicons/react/24/outline';
-
+import { ChartBarIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 import {
   Activity,
   RefreshCw,
@@ -108,22 +107,22 @@ export function Sidebar({
             Zoom Level
           </h2>
           <div className="flex items-center space-x-4">
-            <button
-              onClick={handleZoomOut}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
-            >
-              -
-            </button>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Current Zoom: {zoomLevel.toFixed(1)}
-            </p>
-            <button
-              onClick={handleZoomIn}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
-            >
-              +
-            </button>
-          </div>
+  <button
+    onClick={handleZoomOut}
+    className="p-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
+  >
+    <MinusIcon className="h-5 w-5" aria-hidden="true" />
+  </button>
+  <p className="text-sm text-gray-500 dark:text-gray-400">
+    Zoom: {zoomLevel.toFixed(1)}
+  </p>
+  <button
+    onClick={handleZoomIn}
+    className="p-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
+  >
+    <PlusIcon className="h-5 w-5" aria-hidden="true" />
+  </button>
+</div>
         </div>
 
         {/* Middle Section: Devices */}
