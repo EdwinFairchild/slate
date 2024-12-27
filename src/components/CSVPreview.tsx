@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-export function CSVPreview({ headers, data, onApplyRegex }: CSVPreviewProps) {
+
+export function CSVPreview({ headers, data, onApplyRegex, onUndoRegex }: CSVPreviewProps) {
   const [regexInputs, setRegexInputs] = useState<Record<string, string>>(
     Object.fromEntries(headers.map(header => [header, '']))
   );
@@ -18,15 +19,22 @@ export function CSVPreview({ headers, data, onApplyRegex }: CSVPreviewProps) {
     }
   };
 
+  const handleUndoRegex = (header: string) => {
+    console.log('Undoing last regex for column:', header); // Debug
+    onUndoRegex(header);
+  };
+
   return (
     <div className="h-full overflow-auto">
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className="sticky top-0 bg-white dark:bg-gray-800">
           <tr>
-            {headers.map(header => (
+            {headers.map((header, index) => (
               <th
                 key={header}
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                className={`px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
+                  index === 0 ? 'w-40' : 'w-auto'
+                }`} // Adjust width for the first column
               >
                 {header}
               </th>
@@ -36,10 +44,12 @@ export function CSVPreview({ headers, data, onApplyRegex }: CSVPreviewProps) {
         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
           {data.map((row, i) => (
             <tr key={i}>
-              {headers.map(header => (
+              {headers.map((header, index) => (
                 <td
                   key={header}
-                  className="px-3 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
+                  className={`px-3 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 ${
+                    index === 0 ? 'w-32' : 'w-auto'
+                  }`} // Apply width adjustment for the first column
                 >
                   {row[header]}
                 </td>
@@ -47,21 +57,35 @@ export function CSVPreview({ headers, data, onApplyRegex }: CSVPreviewProps) {
             </tr>
           ))}
           <tr>
-            {headers.map(header => (
-              <td key={header} className="px-3 py-2 whitespace-nowrap text-sm">
+            {headers.map((header, index) => (
+              <td
+                key={header}
+                className={`px-3 py-2 whitespace-nowrap text-sm ${
+                  index === 0 ? 'w-48' : index === 1 ? 'w-56' : 'w-auto'
+                }`} // Apply width adjustment for the first column
+              >
                 <div className="flex space-x-2">
+                  {/* Input for Regex */}
                   <input
                     type="text"
-                    placeholder="Enter regex"
+                    placeholder="regex"
                     value={regexInputs[header]}
                     onChange={e => handleRegexChange(header, e.target.value)}
                     className="block w-full px-2 py-1 text-sm border rounded"
                   />
+                  {/* Apply Button */}
                   <button
                     onClick={() => handleApplyRegex(header)}
                     className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
                     Apply
+                  </button>
+                  {/* Undo Button */}
+                  <button
+                    onClick={() => handleUndoRegex(header)}
+                    className="px-2 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  >
+                    Undo
                   </button>
                 </div>
               </td>
