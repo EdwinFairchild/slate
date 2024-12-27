@@ -69,7 +69,7 @@ export function SCPIReference() {
 
   const testCommand = async (command: string) => {
     if (!selectedDevice?.isConnected) {
-      
+
       addLog('error', "No connected device selected.");
       return;
     }
@@ -84,7 +84,7 @@ export function SCPIReference() {
   };
   const handleSendCustomCommand = () => {
     if (customCommand.trim() === '') {
-      addLog('info', 'Please enter a command.');
+      addLog('error', 'No command to send.');
       return;
     }
     testCommand(customCommand); // Call testCommand with the custom command
