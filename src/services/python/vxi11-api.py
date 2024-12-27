@@ -80,7 +80,7 @@ def handle_test_data(test_data, device_ip,output_dir):
     try:
         with open(csv_file_path, mode='w', newline='',buffering=1) as csv_file:
             csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(['Timestamp', 'Command', 'Response', 'Error'])
+            csv_writer.writerow(['Timestamp', 'Command', 'Response'])
 
             # Start test execution
             start_time = time.time()
@@ -101,11 +101,11 @@ def handle_test_data(test_data, device_ip,output_dir):
                         response = send_scpi_command(device_ip, cmd_text)
                         if response == "No response":
                             continue
-                        csv_writer.writerow([time.strftime('%H:%M:%S'), cmd_text, response, ""])
+                        csv_writer.writerow([time.strftime('%H:%M:%S'), cmd_text, response])
                         command_status[cmd_text] = True  # Mark as executed
                     except Exception as e:
                         # Log errors to the CSV
-                        csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, "", str(e)])
+                        csv_writer.writerow([time.strftime('%Y-%m-%d %H:%M:%S'), cmd_text, str(e)])
 
                     #Wait after the command execution
                     if wait_after > 0:
