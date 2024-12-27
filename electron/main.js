@@ -37,7 +37,7 @@ ipcMain.handle('get-test-duration', async (_, testId) => {
   }
 
   if (testInfo) {
-    console.log('------------Test duration:', testInfo.duration);
+    //console.log('------------Test duration:', testInfo.duration);
     return testInfo.duration; // Duration in minutes
   } else {
     throw new Error('Test not found');
@@ -61,7 +61,7 @@ ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
   })();
 `);
 
-  console.log('Current theme:', theme);
+  //console.log('Current theme:', theme);
 
   try {
     const { stdout } = await new Promise((resolve, reject) => {
@@ -101,7 +101,7 @@ ipcMain.handle('generate-chart', async (_, { filePath, xAxis, yAxis }) => {
 });
 //=================================================================================
 ipcMain.handle('get-tests', () => {
-  // console.log('main.js got test from store:', store.get('tests', []));
+  // //console.log('main.js got test from store:', store.get('tests', []));
   // get the savedirectory
   saveDirectory = store.get('saveDirectory', null);
   return store.get('tests', []); // default to empty array
@@ -111,7 +111,7 @@ ipcMain.handle('save-tests', (_, tests) => {
   store.set('tests', tests);
   // save the savedirectory
   store.set('saveDirectory', saveDirectory);
-  // console.log('main.js  Saved tests:', tests);
+  // //console.log('main.js  Saved tests:', tests);
   return { success: true };
 });
 //=================================================================================
@@ -120,7 +120,7 @@ function saveTestsToFile(tests) {
   try {
     fs.writeFileSync(filePath, JSON.stringify(tests, null, 2));
   } catch (err) {
-    console.error('Failed to save tests file:', err);
+    //console.error('Failed to save tests file:', err);
   }
 }
 //=================================================================================
@@ -141,7 +141,7 @@ ipcMain.handle('selectDirectory', async () => {
 });
 //=================================================================================
 function addLog(level, ...args) {
-  console.log(`[${level.toUpperCase()}]`, ...args);
+  //console.log(`[${level.toUpperCase()}]`, ...args);
 }
 //=================================================================================
 ipcMain.handle('save-selected-device', (_, device) => {
@@ -265,7 +265,7 @@ ipcMain.handle('start-test', async (_, testData) => {
 
     const resultPromise = new Promise((resolve, reject) => {
       childProcess.stdout.on('data', (data) => {
-        console.log('Raw logs from Python:', data.toString().trim());
+        //console.log('Raw logs from Python:', data.toString().trim());
         try {
           const parsedData = JSON.parse(data.toString().trim());
           if (parsedData.status === 'running' && !currentTestId) {
@@ -282,7 +282,7 @@ ipcMain.handle('start-test', async (_, testData) => {
             };
 
             // **Add this log to verify duration**
-            // console.log('Storing TestInfo:', testInfo);
+            // //console.log('Storing TestInfo:', testInfo);
 
             // Store in ongoingTests
             ongoingTests.set(currentTestId, testInfo);
@@ -301,17 +301,17 @@ ipcMain.handle('start-test', async (_, testData) => {
             addLog('info', `Test started successfully. Log file: ${parsedData.log_file_path}`);
           }
         } catch (err) {
-          console.error('Error parsing Python response:', err.message);
+          //console.error('Error parsing Python response:', err.message);
         }
       });
 
       childProcess.stderr.on('data', (stderr) => {
-        console.error('Error from Python:', stderr.toString().trim());
+        //console.error('Error from Python:', stderr.toString().trim());
         reject(stderr.toString().trim());
       });
 
       childProcess.on('close', (code) => {
-        console.log(`Python process closed with code ${code}`);
+        //console.log(`Python process closed with code ${code}`);
         if (code !== 0 && !currentTestId) {
           reject(new Error(`Python script exited with code ${code}`));
         }
@@ -326,13 +326,12 @@ ipcMain.handle('start-test', async (_, testData) => {
             ongoingTests.delete(currentTestId);
             completedTests.set(currentTestId, testInfo);
 
-            console.log(`Test ${currentTestId} has been moved to completedTests.`);
 
             // Notify renderer process
             // BrowserWindow.getAllWindows().forEach((window) => {
             if (code === 0) {
               // "test-completed" is just an example channel name
-              console.log(`Emitting test-completed for Test ID: ${currentTestId}`);
+              //console.log(`Emitting test-completed for Test ID: ${currentTestId}`);
               mainWindowGlobal.webContents.send('test-completed', {
                 testId: currentTestId,
                 status: testInfo.status,
@@ -343,14 +342,14 @@ ipcMain.handle('start-test', async (_, testData) => {
           } else {
             // pass
 
-            console.error(`Test Info for Test ID ${currentTestId} not found.`);
+            //console.error(`Test Info for Test ID ${currentTestId} not found.`);
           }
         }
       });
     });
 
     const initialResult = await resultPromise;
-    console.log('Initial Test Result:', initialResult);
+    //console.log('Initial Test Result:', initialResult);
     return initialResult;
   } catch (error) {
     addLog('error', 'Error executing start-test:', error);
@@ -369,10 +368,6 @@ ipcMain.handle('stop-test', async (_, testId) => {
   const testInfo = ongoingTests.get(testId);
   const childProcess = testInfo.childProcess;
 
-  // Debugging logs
-  console.log(`Attempting to kill test ${testId}:`, childProcess);
-  console.log(`Type of childProcess.kill: ${typeof childProcess.kill}`);
-
   if (typeof childProcess.kill !== 'function') {
     return {
       status: 'error',
@@ -386,7 +381,7 @@ ipcMain.handle('stop-test', async (_, testId) => {
 
     return { status: 'success', message: `Test ${testId} stopped.` };
   } catch (error) {
-    console.error(`Failed to kill test ${testId}:`, error);
+    //console.error(`Failed to kill test ${testId}:`, error);
     return { status: 'error', message: `Failed to stop test ${testId}: ${error.message}` };
   }
 });
@@ -432,7 +427,7 @@ ipcMain.handle('dialog:openDirectory', async () => {
     return new Promise((resolve, reject) => {
       fs.readdir(filePaths[0], (err, files) => {
         if (err) {
-          console.error('Failed to read directory:', err);
+          //console.error('Failed to read directory:', err);
           return reject(err);
         }
         const csvFiles = files.filter(file => file.endsWith('.csv'));
@@ -467,14 +462,14 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
         })
       )
       .on('error', (error) => {
-        console.error('CSV parsing error:', error);
+        //console.error('CSV parsing error:', error);
         reject(error);
       })
       .on('data', (row) => {
         rowCount++;
 
         if (rowCount % 10000 === 0) {
-          console.log('Processed ${ rowCount } rows so far...');
+          //console.log('Processed ${ rowCount } rows so far...');
         }
 
         fullDatasetCache[filePath].push(row);
@@ -485,11 +480,11 @@ ipcMain.handle('file:readCSV', async (_, filePath) => {
       })
       .on('end', () => {
         csvFilePath = filePath;
-        // console.log(`CSV parsing completed. Total rows: ${rowCount}`);
+        // //console.log(`CSV parsing completed. Total rows: ${rowCount}`);
 
-        // console.log("the file path is:", filePath);
+        // //console.log("the file path is:", filePath);
         //print the csv file for testing
-        //console.log(fullDatasetCache[filePath]);
+        ////console.log(fullDatasetCache[filePath]);
         resolve({
           headers: Object.keys(previewRows[0] || {}),
           data: previewRows,
@@ -507,8 +502,8 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
       throw new Error('Full dataset is not cached. Unable to save.');
     }
 
-    console.log(`Writing CSV to: ${filePath}`);
-    console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
+    //console.log(`Writing CSV to: ${filePath}`);
+    //console.log(`Cached rows: ${fullDatasetCache[filePath].length}`);
 
     // Apply regex rules to the entire cached dataset
     const updatedDataset = fullDatasetCache[filePath].map((row) => {
@@ -519,7 +514,7 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
             const regExp = new RegExp(regex, 'g');
             updatedRow[column] = updatedRow[column].replace(regExp, '');
           } catch (err) {
-            console.error(`Invalid regex for column "${column}":`, regex, err);
+            //console.error(`Invalid regex for column "${column}":`, regex, err);
           }
         }
       }
@@ -538,10 +533,10 @@ ipcMain.handle('file:writeCSV', async (_, { filePath, headers, regexRules }) => 
     // Write the updated dataset back to the file
     await csvWriter.writeRecords(updatedDataset);
 
-    console.log('File saved successfully.');
+    //console.log('File saved successfully.');
     return true;
   } catch (error) {
-    console.error('Failed to write CSV:', error);
+    //console.error('Failed to write CSV:', error);
     throw error;
   }
 });
@@ -570,11 +565,11 @@ app.on('before-quit', () => {
 //=================================================================================
 function cleanupResources() {
   ongoingTests.forEach((childProcess, testId) => {
-    console.log(`Terminating test: ${testId}`);
+    //console.log(`Terminating test: ${testId}`);
     try {
       childProcess.kill('SIGKILL'); // Forcefully terminate if necessary
     } catch (error) {
-      console.error(`Failed to terminate test: ${testId}`, error);
+      //console.error(`Failed to terminate test: ${testId}`, error);
     }
   });
   ongoingTests.clear();
