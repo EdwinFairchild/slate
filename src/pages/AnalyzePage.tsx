@@ -4,10 +4,11 @@ import { FileList } from '../components/FileList';
 import { CSVPreview } from '../components/CSVPreview';
 import { CSVEditor } from '../components/CSVEditor';
 import { useCSVData } from '../hooks/useCSVData';
-import { ChartComponent } from '../components/ChartComponent';
+import { useDevice } from '../components/DeviceContext';
 import { useAnalyzePage } from '../components/AnalyzePageContext';
 import { Alert } from '../components/ui/Alert';
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 export function AnalyzePage() {
   const {
     directoryPath,
@@ -20,7 +21,7 @@ export function AnalyzePage() {
     setCachedData,
 
   } = useAnalyzePage();
-
+  const { addLog } = useDevice();
   const [selectedXAxis, setSelectedXAxis] = useState<string | null>(null);
   const [selectedYAxis, setSelectedYAxis] = useState<string | null>(null);
 
@@ -35,7 +36,7 @@ export function AnalyzePage() {
 
   const handleGenerateChart = async () => {
     if (!selectedXAxis || !selectedYAxis || !selectedFile) {
-      console.error('Both X and Y axes and a file must be selected.');
+      addLog('error', 'Both X and Y axes and a file must be selected.');
       return;
     }
 
@@ -47,17 +48,17 @@ export function AnalyzePage() {
         yAxis: selectedYAxis,
       });
     } catch (error) {
-      console.error('Failed to generate chart:', error);
+      addLog('error', 'Failed to generate chart:', error);
     }
   }
   const handleSelectXAxis = (header: string) => {
     setSelectedXAxis(header);
-    console.log('X Axis selected:', header);
+    addLog('info', 'X Axis selected:', header);
   };
 
   const handleSelectYAxis = (header: string) => {
     setSelectedYAxis(header);
-    console.log('Y Axis selected:', header);
+    addLog('info', 'Y Axis selected:', header);
   };
 
   const handleApplyRegex = (header: string, regex: string) => {
@@ -76,21 +77,21 @@ export function AnalyzePage() {
         [header]: regex,
       }));
 
-      console.log('Updated cached data:', newData); // Debug log
-      console.log('Updated regex rules:', regexRules); // Debug log
+      addLog('info', 'Updated cached data:', newData); // Debug log
+      addLog('info', 'Updated regex rules:', regexRules); // Debug log
     } catch (err) {
-      console.error('Error applying regex:', err);
+      addLog('error', 'Error applying regex:', err);
     }
   };
 
   const handleSaveFile = async () => {
     if (!cachedData || !selectedFile || !directoryPath || Object.keys(regexRules).length === 0) {
-      console.error('Missing required data for saving.');
+      addLog('error', 'Missing required data for saving.(file or directory path) or no chagnes to save');
       return;
     }
 
     const filePath = `${directoryPath}/${selectedFile}`;
-    console.log(`Saving file to ${filePath}...`);
+    addLog('info', `Saving file to ${filePath}...`);
 
     try {
       await window.api.writeCSV({
@@ -98,10 +99,13 @@ export function AnalyzePage() {
         headers: cachedData.headers,
         regexRules, // Send regex rules to the backend
       });
-      console.log(`File saved successfully to ${filePath}`);
+      addLog('info', `File saved successfully to ${filePath}`);
+      toast.success('File saved successfully!');
+      //cleasr regex rules
+      setRegexRules({});
 
     } catch (err) {
-      console.error('Failed to save file:', err);
+      addLog('error', 'Failed to save file:', err);
 
     }
   };
@@ -117,7 +121,7 @@ export function AnalyzePage() {
         setCachedData(null);
       }
     } catch (error) {
-      console.error('Failed to open directory:', error);
+      addLog('error', 'Failed to open directory:', error);
     }
   };
 

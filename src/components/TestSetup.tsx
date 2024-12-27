@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useRef , useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Plus, ChevronUp, ChevronDown, Clock, Play, Trash2 } from 'lucide-react';
 import { Switch } from './ui/Switch';
 import { CommandForm } from './CommandForm';
@@ -23,7 +23,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   const [tests, setTests] = useState<Test[]>([]);
   const { addLog } = useDevice();
   const hasLoadedRef = React.useRef(false);
-  const oldTestsRef = useRef<Test[]>([]); 
+  const oldTestsRef = useRef<Test[]>([]);
   // 1. Load tests on mount
   useEffect(() => {
     (async () => {
@@ -87,11 +87,11 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   const handleSubmit = (test: Test) => async (e: React.FormEvent) => {
     e.preventDefault();
     e.preventDefault();
-    
+
     const { id, isExpanded, ...testData } = test; // Exclude local properties
     try {
       await onStartTest(testData); // Call the parent handler to start the test
-      addLog('info', `Test "${testData.name}" started.`);
+      
     } catch (error) {
       addLog('error', `Failed to start test: ${error.message || error}`);
     }

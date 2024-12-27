@@ -11,6 +11,8 @@ import { useTheme } from './hooks/useTheme';
 import { TestResultsTable } from './components/TestResultsTable';
 import type { SCPICommand, Device, LogMessage, Page } from './types';
 import type { TestResult } from './types/test';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
   const { theme, setTheme } = useTheme();
@@ -31,7 +33,6 @@ export default function App() {
   // Listen for "test-completed" from main process
   useEffect(() => {
     const handleTestCompleted = (_event: any, data: { testId: string }) => {
-      console.log(`handleTestCompleted triggered for Test ID: ${data.testId}`);
 
       // Mark that test as completed
       setTests((prevTests) =>
@@ -49,11 +50,10 @@ export default function App() {
     };
 
     window.api.onTestCompleted(handleTestCompleted);
-    console.log('Attached handleTestCompleted listener.');
 
     return () => {
       window.api.offTestCompleted(handleTestCompleted);
-      console.log('Detached handleTestCompleted listener.');
+
     };
   }, [addLog]); // Now, addLog is stable due to useCallback
 
@@ -63,13 +63,14 @@ export default function App() {
     test: Omit<TestResult, 'id' | 'status' | 'startTime' | 'endTime' | 'logFilePath'>
   ) => {
     try {
+      // python backend returns file path of the log file
       const result = await window.api.startTest(test);
       if (result.status === 'error') {
-        console.error(`Test failed: ${result.message}`);
+        addLog('error', `Test failed: ${result.message}`);
         throw new Error(result.message);
       }
 
-      console.log(`Test started successfully. Log file: ${result.logFilePath}`);
+      addLog('info', `Test started successfully.\nSaving to: ${result.logFilePath}`);
       setTests((prevTests) => [
         ...prevTests,
         {
@@ -83,7 +84,7 @@ export default function App() {
         },
       ]);
     } catch (error) {
-      console.error(`Unexpected error: ${error}`);
+      addLog('error', `Unexpected error: ${error}`);
       throw error;
     }
   };
@@ -117,12 +118,13 @@ export default function App() {
   // (Optional) Rerun test
   const handleRerunTest = (testId: string) => {
     addLog('info', `Rerunning test with ID: ${testId}`);
-    // ...
+    // not implemented, probably dont need it
   };
 
   // **New**: Remove test from table (and stop it if it’s running)
   const handleRemoveTest = async (testId: string, status: string) => {
     // If running, stop the test
+    addLog('info', `Stopping test ${testId} ...`);
     if (status === 'running') {
       const response = await window.api.stopTest(testId);
       if (response.status !== 'success') {
@@ -130,9 +132,13 @@ export default function App() {
         return;
       }
     }
+    else {
+      addLog('info', `Test ${testId} is not running.`);
+    }
     // Now remove from state
     setTests((prevTests) => prevTests.filter((t) => t.id !== testId));
-    addLog('info', `Test ${testId} removed from table.`);
+    addLog('info', `Test ${testId} stopped and removed from table.`);
+    toast.success(`Test ${testId} stopped and removed.`);
   };
 
   // Search devices
@@ -203,7 +209,7 @@ export default function App() {
               </button>
             </div>
           </div>
-
+          <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'} />
           {/* <main className="mb-8">
             <DeviceStatus />
           </main> */}
