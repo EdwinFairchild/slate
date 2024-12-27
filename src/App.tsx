@@ -209,7 +209,7 @@ export default function App() {
               </button>
             </div>
           </div>
-          <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'} />
+          <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'}  position="top-center" />
           {/* <main className="mb-8">
             <DeviceStatus />
           </main> */}
