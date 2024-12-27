@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDevice } from './DeviceContext';
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 
 import {
   Activity,
-  Settings,
   RefreshCw,
   Loader2,
   Search,
-  Github
+  Github,
 } from 'lucide-react';
 
 interface Device {
@@ -25,7 +24,6 @@ interface SidebarProps {
   activePage: string;
   onSearchDevices: () => void;
   onNavigate: (page: string) => void;
-  // Remove selectedDevice & setSelectedDevice from props
 }
 
 export function Sidebar({
@@ -34,9 +32,28 @@ export function Sidebar({
   isSearching,
   activePage,
   onSearchDevices,
-  onNavigate
+  onNavigate,
 }: SidebarProps) {
   const { selectedDevice, setSelectedDevice, addLog } = useDevice();
+  const [zoomLevel, setZoomLevel] = useState(0);
+
+  useEffect(() => {
+    // Fetch the initial zoom level when the component mounts
+    const initialZoomLevel = window.api.getZoomLevel();
+    setZoomLevel(initialZoomLevel);
+  }, []);
+
+  const handleZoomIn = () => {
+    const newZoomLevel = Math.min(zoomLevel + 0.5, 5); // Limit to max zoom level
+    setZoomLevel(newZoomLevel);
+    window.api.setZoomLevel(newZoomLevel);
+  };
+
+  const handleZoomOut = () => {
+    const newZoomLevel = Math.max(zoomLevel - 0.5, -5); // Limit to min zoom level
+    setZoomLevel(newZoomLevel);
+    window.api.setZoomLevel(newZoomLevel);
+  };
 
   const handleSelectDirectory = async () => {
     try {
@@ -49,11 +66,11 @@ export function Sidebar({
 
   return (
     <div
-      className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${isOpen ? 'w-64' : 'w-0'
-        } overflow-hidden`}
+      className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
+        isOpen ? 'w-64' : 'w-0'
+      } overflow-hidden`}
     >
       <div className="flex flex-col h-full">
-
         {/* Top Section */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -62,25 +79,51 @@ export function Sidebar({
           <nav className="space-y-2">
             <button
               onClick={() => onNavigate('tests')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'tests'
-                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
+                activePage === 'tests'
+                  ? 'bg-blue-400 dark:bg-blue-900 text-white dark:text-blue-300'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
             >
               <Activity className="h-5 w-5 mr-2" />
               Tests
             </button>
             <button
               onClick={() => onNavigate('analyze')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'analyze'
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${
+                activePage === 'analyze'
+                  ? 'bg-blue-400 dark:bg-blue-900 text-white dark:text-blue-300'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+              }`}
             >
               <ChartBarIcon className="h-5 w-5 mr-2" />
               Analyze
             </button>
           </nav>
+        </div>
+
+        {/* Zoom Control Section */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Zoom Level
+          </h2>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleZoomOut}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
+            >
+              -
+            </button>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Current Zoom: {zoomLevel.toFixed(1)}
+            </p>
+            <button
+              onClick={handleZoomIn}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Middle Section: Devices */}
@@ -102,27 +145,19 @@ export function Sidebar({
             </button>
           </div>
 
-          <div className="relative mb-4">
-            <input
-              type="text"
-              placeholder="Search devices..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-          </div>
-
           <div className="space-y-2">
             {devices.map((device) => (
               <button
                 key={device.id}
                 onClick={() => {
                   setSelectedDevice(device);
-                  window.api.saveSelectedDevice(device); // If needed
+                  window.api.saveSelectedDevice(device);
                 }}
-                className={`w-full p-3 rounded-lg text-left transition-colors ${selectedDevice?.id === device.id
-                  ? 'bg-blue-100 dark:bg-blue-900'
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
+                className={`w-full p-3 rounded-lg text-left transition-colors ${
+                  selectedDevice?.id === device.id
+                    ? 'bg-blue-100 dark:bg-blue-900'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -134,10 +169,11 @@ export function Sidebar({
                     </p>
                   </div>
                   <span
-                    className={`h-2 w-2 rounded-full ${device.isConnected
-                      ? 'bg-green-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
+                    className={`h-2 w-2 rounded-full ${
+                      device.isConnected
+                        ? 'bg-green-500'
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
                   />
                 </div>
               </button>

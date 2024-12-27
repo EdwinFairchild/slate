@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webFrame  } = require('electron');
 
 
 // Expose protected methods that allow the renderer process to use
@@ -45,6 +45,8 @@ contextBridge.exposeInMainWorld(
     ipcRenderer.invoke('generate-chart', params),
   getTheme: () => localStorage.getItem('theme') || 'light',
   getTestDuration: async (testId) => ipcRenderer.invoke('get-test-duration', testId), // Exposed method
+  getZoomLevel: () => webFrame.getZoomLevel(),
+  setZoomLevel: (level) => webFrame.setZoomLevel(level),
   on: (channel, callback) => {
     const validChannels = ['test-completed']; // Add other channels if necessary
     if (validChannels.includes(channel)) {

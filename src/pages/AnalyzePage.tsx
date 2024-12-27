@@ -214,7 +214,7 @@ export function AnalyzePage() {
         <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 overflow-y-auto">
           <button
             onClick={handleDirectoryOpen}
-            className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2"
+            className="flex items-center px-3 py-2  rounded-lg bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition mb-2"
           >
             <FolderOpen className="h-4 w-4 mr-2" />
             Open Directory
@@ -255,7 +255,7 @@ export function AnalyzePage() {
 
               <button
                 onClick={handleSaveFile}
-                className="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-blue-700"
+                className="px-3 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
               >
                 Save changes to file
               </button>

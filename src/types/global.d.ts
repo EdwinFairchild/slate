@@ -12,6 +12,8 @@ declare global {
       openDirectory: () => Promise<{ path: string; files: string[] } | null>;
       generateChart: (filePath: string) => Promise<any>;
       getTestDuration: (testId: string) => Promise<number>; // Added method
+      getZoomLevel: () => number;
+      setZoomLevel: (level: number) => void;
       // Optionally, add event listeners if needed
       on: (channel: string, callback: (...args: any[]) => void) => void;
       removeListener: (channel: string, callback: (...args: any[]) => void) => void;
