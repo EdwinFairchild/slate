@@ -31,6 +31,7 @@ interface Device {
 interface Command {
   command: string;
   runOnce: boolean;
+  noTimeout: boolean;
   waitAfter: number;
 }
 

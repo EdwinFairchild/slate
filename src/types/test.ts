@@ -23,5 +23,6 @@ export interface TestGraphData {
 export interface Command {
   command: string;
   runOnce: boolean;
+  noTimeout: boolean;
   waitAfter: number;
 }

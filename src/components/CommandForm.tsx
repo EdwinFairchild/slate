@@ -10,7 +10,7 @@ interface CommandFormProps {
 
 export function CommandForm({ commands, chainCommands, onCommandsChange }: CommandFormProps) {
   const handleAddCommand = () => {
-    onCommandsChange([...commands, { command: '', runOnce: false, waitAfter: 0 }]);
+    onCommandsChange([...commands, { command: '', runOnce: false, noTimeout:false , waitAfter: 0 }]);
   };
 
   const handleRemoveCommand = (index: number) => {
@@ -56,10 +56,8 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
                 required
               />
             </div>
-            <div className="relative group">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Run Once
-              </label>
+            <div className="relative group flex items-center space-x-2 ">
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -69,13 +67,32 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
                   }
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Enable run once</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Run once</span>
               </div>
 
               {/* Tooltip */}
-              <div className="absolute left-0 mt-1 hidden group-hover:block w-64 bg-black text-white text-xs rounded-md p-2 shadow-lg">
-                This option ensures the command runs only once during the test, instead of repeating.
+              {/* <div className="absolute left-30 mt-1 hidden group-hover:block w-64 bg-black text-white text-xs rounded-md p-2 shadow-lg">
+                Run once :This option ensures the command runs only once during the test, instead of repeating.<p></p>
+                <p></p>
+                No timeout :This option disables the timeout for the command, allowing slow commands to respond.<p></p>
+              </div> */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={command.noTimeout}
+                  onChange={(f) =>
+                    handleCommandChange(index, 'noTimeout', f.target.checked)
+                  }
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">No timeout</span>
+                {/* Tooltip */}
+
+
               </div>
+
+
+
             </div>
 
           </div>
@@ -83,7 +100,7 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
           {chainCommands && index < commands.length - 1 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Wait After Command (ms)
+                Delay before next command (ms)
               </label>
               <input
                 type="number"
