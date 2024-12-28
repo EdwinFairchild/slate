@@ -64,6 +64,7 @@ def handle_test_data(test_data, device_ip,output_dir):
     duration = test_data.get("duration", 0) * 60  # Convert duration from minutes to seconds
     interval = test_data.get("interval", 0) / 1000.0  # Convert interval from ms to seconds
     commands = test_data.get("commands", [])
+    first_column = test_data.get("firstCol", "Index")
     
     # Generate a unique CSV file for logging
     file_name = f"{test_name}_{test_id}.csv"
@@ -80,11 +81,17 @@ def handle_test_data(test_data, device_ip,output_dir):
     try:
         with open(csv_file_path, mode='w', newline='',buffering=1) as csv_file:
             csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(['Timestamp', 'Command', 'Response'])
+            if first_column == "Timestamp":
+                csv_writer.writerow(['Timestamp', 'Command', 'Response'])
+            if first_column == "Index":
+                csv_writer.writerow(['Index', 'Command', 'Response'])
+            if first_column == "Both":
+                csv_writer.writerow(['Index', 'Timestamp', 'Command', 'Response'])
 
             # Start test execution
             start_time = time.time()
             command_status = {}
+            indexCount = 0
 
             while time.time() - start_time < duration:
                 for command in commands:
@@ -97,11 +104,18 @@ def handle_test_data(test_data, device_ip,output_dir):
                         continue
                     
                     try:
+                        indexCount += 1
                         # Send SCPI command
                         response = send_scpi_command(device_ip, cmd_text)
                         if response == "No response":
                             continue
-                        csv_writer.writerow([time.strftime('%H:%M:%S'), cmd_text, response])
+                        if first_column == "Timestamp":
+                            csv_writer.writerow([time.strftime('%H:%M:%S'), cmd_text, response])
+                        if first_column == "Index":
+                            csv_writer.writerow([ indexCount , cmd_text, response])
+                        if first_column == "Both":
+                            csv_writer.writerow([indexCount,time.strftime('%H:%M:%S'), cmd_text, response])
+
                         command_status[cmd_text] = True  # Mark as executed
                     except Exception as e:
                         # Log errors to the CSV

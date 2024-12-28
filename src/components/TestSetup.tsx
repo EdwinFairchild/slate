@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Plus, ChevronUp, ChevronDown, Clock, Play, Trash2 } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Plus, ChevronUp, ChevronDown, Play, Trash2 } from 'lucide-react';
 import { Switch } from './ui/Switch';
 import { CommandForm } from './CommandForm';
 import type { Command } from '../types/test';
@@ -13,6 +13,7 @@ interface Test {
   chainCommands: boolean;
   commands: Command[];
   isExpanded: boolean;
+  firstCol: "Timestamp" | "Index" | "Both"; // New property
 }
 
 interface TestSetupProps {
@@ -24,7 +25,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   const { addLog } = useDevice();
   const hasLoadedRef = React.useRef(false);
   const oldTestsRef = useRef<Test[]>([]);
-  // 1. Load tests on mount
+
   useEffect(() => {
     (async () => {
       try {
@@ -37,37 +38,33 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
     })();
   }, []);
 
-  // 2. Only auto-save AFTER the first load
   useEffect(() => {
-    // Compare the new tests array with an old ref before saving
     if (JSON.stringify(tests) !== JSON.stringify(oldTestsRef.current)) {
       window.api.saveTests(tests);
       oldTestsRef.current = tests;
     }
   }, [tests]);
 
-  // Add a new test template
   const handleAddTest = () => {
     setTests((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         name: '',
-        duration: 60,
+        duration: 1,
         interval: 1000,
         chainCommands: false,
         commands: [{ command: '', runOnce: false, waitAfter: 0 }],
         isExpanded: true,
+        firstCol: "Index", // Default value
       },
     ]);
   };
 
-  // Remove a specific test
   const handleRemoveTest = (id: string) => {
     setTests((prev) => prev.filter((test) => test.id !== id));
   };
 
-  // Toggle expand/collapse for a test
   const toggleExpand = (id: string) => {
     setTests((prev) =>
       prev.map((test) =>
@@ -76,22 +73,23 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
     );
   };
 
-  // Update test details (e.g., name, duration)
   const handleTestChange = (id: string, changes: Partial<Test>) => {
     setTests((prev) =>
       prev.map((test) => (test.id === id ? { ...test, ...changes } : test))
     );
   };
 
-  // Handle form submission for a test
   const handleSubmit = (test: Test) => async (e: React.FormEvent) => {
     e.preventDefault();
-    e.preventDefault();
 
-    const { id, isExpanded, ...testData } = test; // Exclude local properties
+    if (!test.firstCol) {
+      alert("Please select at least one test type.");
+      return;
+    }
+
+    const { id, isExpanded, ...testData } = test;
     try {
-      await onStartTest(testData); // Call the parent handler to start the test
-      
+      await onStartTest(testData);
     } catch (error) {
       addLog('error', `Failed to start test: ${error.message || error}`);
     }
@@ -175,6 +173,46 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
                   required
                 />
               </div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Iterration label
+              </label>
+              <div className="flex space-x-4">
+                <label className="text-gray-700 dark:text-gray-300 flex items-center">
+                  <input
+                    type="checkbox"
+                    className="mr-2" /* Adds spacing between the checkbox and text */
+                    checked={test.firstCol === "Timestamp" || test.firstCol === "Both"}
+                    onChange={(e) =>
+                      handleTestChange(test.id, {
+                        firstCol: e.target.checked
+                          ? test.firstCol === "Index"
+                            ? "Both"
+                            : "Timestamp"
+                          : "Index",
+                      })
+                    }
+                  />
+                  <span>Timestamp</span> {/* Wrap text with a span */}
+                </label>
+                <label className="text-gray-700 dark:text-gray-300 flex items-center">
+                  <input
+                    type="checkbox"
+                    className="mr-2" /* Adds spacing between the checkbox and text */
+                    checked={test.firstCol === "Index" || test.firstCol === "Both"}
+                    onChange={(e) =>
+                      handleTestChange(test.id, {
+                        firstCol: e.target.checked
+                          ? test.firstCol === "Timestamp"
+                            ? "Both"
+                            : "Index"
+                          : "Timestamp",
+                      })
+                    }
+                  />
+                  <span>Index</span> {/* Wrap text with a span */}
+                </label>
+              </div>
+
 
               <div className="flex items-center justify-between py-1">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

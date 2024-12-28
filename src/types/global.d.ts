@@ -42,4 +42,5 @@ interface Test {
   chainCommands: boolean;
   commands: Command[];
   isExpanded: boolean;
+  firstCol: "Timestamp" | "Index" | "Both"; // New property
 }
