@@ -6,47 +6,79 @@ import sys
 import time
 import csv
 import threading
+import pyvisa
+import uuid
+import pyvisa
 
-def scan_lxi_devices(subnet):
+def scan_lxi_devices(subnet=None):
     """
-    Scan the given subnet for LXI devices using the liblxi.so library.
-    Returns a list of devices with id, name, address, type, and isConnected.
+    Scan for LXI devices using PyVISA and return a list of devices
+    with id, name, address, type, and isConnected.
     """
-    ## returns IP
-    instr = vxi11.list_devices()
+    # Initialize Resource Manager
+    rm = pyvisa.ResourceManager()
+    
     devices = []
-    for device in instr:
+    try:
+        # List available resources
+        resources = rm.list_resources()
+        
+        
         try:
-            dev = vxi11.Instrument(device)
-            response = dev.ask("*IDN?")
-            devices.append((device, response))
+            device_list = [res for res in resources if "TCPIP" in res or "USB" in res]
+            if device_list:
+                for device_found in device_list:
+                    # Open a session to the resource
+                    instrument = rm.open_resource(device_found)
+                    # Query the instrument for identification
+                    response = instrument.query("*IDN?")
+                    instrument.close()
+                    # Parse the IDN response
+                    idn_parts = response.split(",")
+                    device_name = idn_parts[1] if len(idn_parts) > 1 else "Unknown"
+
+                    # Add device to the list
+                    devices.append({
+                        "id": str(uuid.uuid4()),
+                        "name": device_name,
+                        "address": device_found,
+                        "type": "Unknown",  # Type determination could be added here if needed
+                        "isConnected": False  # Assume devices are not connected for now
+                    })
         except Exception as e:
-            devices.append((device, str(e)))
-    #[('10.0.0.150', 'Siglent Technologies,SDS3034X HD,SDS3HA0Q800623,4.8.9.1.0.3.9'), ('10.0.0.207', 'Siglent Technologies,SDM3055,SDM35GBQ4R0653,1.01.01.20R2')]
-    response  = []
-    # itterate thourgh devices
-    for device in devices:
-        device_id = str(uuid.uuid4())  # Generate a unique ID for each device
-        response.append({
-            "id": device_id,
-            "name": device[1].split(",")[1],
-            "address" : device[0],
-            "type" : "Unknown",
-            "isConnected" : False,
-
+            # Add a placeholder for devices that failed to respond
+            devices.append({
+                "id": str(uuid.uuid4()),
+                "name": "Unknown",
+                "address": resource,
+                "type": "Error",
+                "isConnected": False,
+                "error": str(e)
             })
-    return response
+    except Exception as e:
+        print(f"Error while scanning devices: {e}")
 
-def send_scpi_command(device_address, command):
+    return devices
+
+
+def send_scpi_command( device_address, command):
     """
     Send an SCPI command to the device at the given address.
     Returns the response from the device.
     """
     response = "NA"
     try:
-        dev = vxi11.Instrument(device_address)
-        dev.timeout = 1.5 # TODO: Make this configurable
-        response = dev.ask(command)
+        rm = pyvisa.ResourceManager()
+        dev = rm.open_resource(device_address)
+        # check if the scpi command is a command or query
+        if "?" in command:
+            # send query with long timeout so it has time to respond
+            dev.timeout = 25000
+            response = dev.query(command)
+        else:
+            # commands dont need a response
+            dev.write(command)
+        dev.close()
         return response
     except Exception as e:
         return "No response"
@@ -54,6 +86,7 @@ def send_scpi_command(device_address, command):
 def handle_test_data(test_data, device_ip,output_dir):
     """
     Handles the test data, executes commands, creates a CSV log, and returns a JSON response.
+    !!!!!!  print statements are used to send messages to the Electron app via stdout. !!!!!!!
     """
     # Generate a unique test ID (if needed)
     test_id = f"{str(uuid.uuid4())[:8]}"
@@ -65,6 +98,7 @@ def handle_test_data(test_data, device_ip,output_dir):
     interval = test_data.get("interval", 0) / 1000.0  # Convert interval from ms to seconds
     commands = test_data.get("commands", [])
     first_column = test_data.get("firstCol", "Index")
+    debugCount = 1
     
     # Generate a unique CSV file for logging
     file_name = f"{test_name}_{test_id}.csv"
@@ -92,22 +126,22 @@ def handle_test_data(test_data, device_ip,output_dir):
             start_time = time.time()
             command_status = {}
             indexCount = 0
-
+            newListLoopCommands = []
             while time.time() - start_time < duration:
+               
                 for command in commands:
                     cmd_text = command.get("command", "")
                     run_once = command.get("runOnce", False)
                     wait_after = command.get("waitAfter", 0) / 1000.0  # Convert ms to seconds
                     
-                    # Skip commands that are marked as runOnce and have already been executed
-                    if run_once and command_status.get(cmd_text, False):
-                        continue
-                    
+                    print(f"Print 1 : RunOnce= {run_once} command = {cmd_text}");
                     try:
-                        indexCount += 1
                         # Send SCPI command
                         response = send_scpi_command(device_ip, cmd_text)
-                        if response == "No response":
+                        if run_once:
+                            commands.remove(command)
+                        # skip commands that are not queries because they have no response
+                        if "?" not in cmd_text:
                             continue
                         if first_column == "Timestamp":
                             csv_writer.writerow([time.strftime('%H:%M:%S'), cmd_text, response])
@@ -115,7 +149,7 @@ def handle_test_data(test_data, device_ip,output_dir):
                             csv_writer.writerow([ indexCount , cmd_text, response])
                         if first_column == "Both":
                             csv_writer.writerow([indexCount,time.strftime('%H:%M:%S'), cmd_text, response])
-
+                       
                         command_status[cmd_text] = True  # Mark as executed
                     except Exception as e:
                         # Log errors to the CSV
@@ -124,10 +158,13 @@ def handle_test_data(test_data, device_ip,output_dir):
                     #Wait after the command execution
                     if wait_after > 0:
                         time.sleep(wait_after) 
-                
+    
+                    indexCount += 1
+                                   
                 #Wait for the specified interval before the next iteration
                 if interval > 0:
                     time.sleep(interval)
+                debugCount += 1
 
             return {
                 "status": "success",
@@ -138,38 +175,6 @@ def handle_test_data(test_data, device_ip,output_dir):
             "status": "error",
             "message": str(e)
         }
-
-def handle_test_thread(test_data, device_ip):
-    """
-    Runs a test in a separate thread.
-    """
-    test_id = test_data.get("name", "unnamed_test") + "_" + str(uuid.uuid4())
-    result = handle_test_data(test_data, device_ip)
-    
-    # Remove the test from active tests after completion
-    if test_id in active_tests:
-        del active_tests[test_id]
-
-    print(f"Test {test_id} completed with result: {result}")
-
-
-def start_test(test_data, device_ip):
-    """
-    Starts a new test in a separate thread.
-    """
-    test_id = test_data.get("name", "unnamed_test") + "_" + str(uuid.uuid4())
-    
-    # Create and start a new thread for the test
-    test_thread = threading.Thread(target=handle_test_thread, args=(test_data, device_ip))
-    test_thread.daemon = True  # Ensures the thread will not block program exit
-    active_tests[test_id] = test_thread
-    test_thread.start()
-
-    return {
-        "status": "success",
-        "test_id": test_id,
-        "message": f"Test {test_id} started successfully"
-    }
 def stop_test(test_id):
     """
     Stops the test with the given test_id.
@@ -196,7 +201,7 @@ if __name__ == "__main__":
 
             ip = sys.argv[ip_index]
             command = sys.argv[command_index]
-            response = send_scpi_command(ip, command)
+            response = send_scpi_command(ip, command, False)
             print(response)  # Output response as plain text
         elif "--discover" in sys.argv:
             # Handle device discovery
