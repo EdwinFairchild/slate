@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
             ip = sys.argv[ip_index]
             command = sys.argv[command_index]
-            response = send_scpi_command(ip, command, False)
+            response = send_scpi_command(ip, command)
             print(response)  # Output response as plain text
         elif "--discover" in sys.argv:
             # Handle device discovery
