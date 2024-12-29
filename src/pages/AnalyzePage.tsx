@@ -203,10 +203,7 @@ export function AnalyzePage() {
   }, [setDirectoryPath, setFiles, addLog]);
   return (
     <div className="h-full flex flex-col space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">CSV Analysis</h2>
-       
-      </div>
+
       <div className="flex flex-1 space-x-4 min-h-0">
         <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 overflow-y-auto">
           <button
