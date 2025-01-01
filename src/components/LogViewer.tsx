@@ -7,7 +7,7 @@ interface LogViewerProps {
 
 export function LogViewer({ logs }: LogViewerProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-md shadow p-4">
       <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Command Log</h2>
       <div className="h-64 overflow-auto">
         <table className="min-w-full">

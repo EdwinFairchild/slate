@@ -77,9 +77,9 @@ export function Sidebar({
           <nav className="space-y-2">
             <button
               onClick={() => onNavigate('tests')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'tests'
-                  ? 'bg-blue-400 dark:bg-blue-900 text-white dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              className={`w-full flex items-center px-3 py-2 rounded-md text-left transition-colors ${activePage === 'tests'
+                ? 'bg-blue-400 dark:bg-blue-900 text-white dark:text-blue-300'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
             >
               <Activity className="h-5 w-5 mr-2" />
@@ -87,9 +87,9 @@ export function Sidebar({
             </button>
             <button
               onClick={() => onNavigate('analyze')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors ${activePage === 'analyze'
-                  ? 'bg-blue-400 dark:bg-blue-900 text-white dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              className={`w-full flex items-center px-3 py-2 rounded-md text-left transition-colors ${activePage === 'analyze'
+                ? 'bg-blue-400 dark:bg-blue-900 text-white dark:text-blue-300'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
             >
               <ChartBarIcon className="h-5 w-5 mr-2" />
@@ -106,7 +106,7 @@ export function Sidebar({
           <div className="flex items-center space-x-4">
             <button
               onClick={handleZoomOut}
-              className="p-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
+              className="p-2 bg-gray-200 dark:bg-gray-600 rounded-md text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
             >
               <MinusIcon className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -115,7 +115,7 @@ export function Sidebar({
             </p>
             <button
               onClick={handleZoomIn}
-              className="p-2 bg-gray-200 dark:bg-gray-600 rounded-lg text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
+              className="p-2 bg-gray-200 dark:bg-gray-600 rounded-md text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
             >
               <PlusIcon className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -131,7 +131,7 @@ export function Sidebar({
             <button
               onClick={onSearchDevices}
               disabled={isSearching}
-              className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 disabled:opacity-50"
+              className="p-2 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 disabled:opacity-50"
             >
               {isSearching ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -149,9 +149,9 @@ export function Sidebar({
                   setSelectedDevice(device);
                   window.api.saveSelectedDevice(device);
                 }}
-                className={`w-full p-3 rounded-lg text-left transition-colors ${selectedDevice?.id === device.id
-                    ? 'bg-blue-100 dark:bg-blue-900'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                className={`w-full p-3 rounded-md text-left transition-colors ${selectedDevice?.id === device.id
+                  ? 'bg-blue-100 dark:bg-blue-900'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
               >
                 <div className="flex items-center justify-between">
@@ -165,8 +165,8 @@ export function Sidebar({
                   </div>
                   <span
                     className={`h-2 w-2 rounded-full ${device.isConnected
-                        ? 'bg-green-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                   />
                 </div>
@@ -179,7 +179,7 @@ export function Sidebar({
         <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleSelectDirectory}
-            className="p-2 mb-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 disabled:opacity-50 w-full"
+            className="p-2 mb-2 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 disabled:opacity-50 w-full"
           >
             Select Save Directory
           </button>

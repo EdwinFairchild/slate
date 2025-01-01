@@ -32,8 +32,8 @@ const TestResultsTableComponent: React.FC<TestResultsTableProps> = ({
       {tests.length === 0 ? (
         <p className="text-center text-gray-500">No tests available.</p>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          <div className="max-h-[calc(3*64px)] overflow-y-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow overflow-hidden">
+          <div className="max-h-[calc(5*64px)] overflow-y-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>

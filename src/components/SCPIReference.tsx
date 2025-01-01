@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Search, Copy, Check } from 'lucide-react';
 import { useDevice } from '../components/DeviceContext';
+import { toast } from 'react-toastify';
 interface SCPICommand {
   category: string;
   command: string;
@@ -55,6 +56,7 @@ export function SCPIReference() {
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const { selectedDevice, addLog } = useDevice();
   const [customCommand, setCustomCommand] = useState('');
+  const [responses, setResponses] = useState<string[]>([]); // To store command responses
   const filteredCommands = scpiCommands.filter(cmd =>
     cmd.command.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cmd.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,22 +71,23 @@ export function SCPIReference() {
 
   const testCommand = async (command: string) => {
     if (!selectedDevice?.isConnected) {
-
-      addLog('error', "No connected device selected.");
+      addLog('error', 'No connected device selected.');
+      toast.error('Please connect to a device first.');
       return;
     }
     try {
       const response = await window.api.testCommand(command);
-
-      addLog('info', `command sent: ${command}\n\nResponse: ${response}`);
+      addLog('info', `Command sent: ${command}\nResponse: ${response}`);
+      setResponses((prev) => [...prev, `Command: ${command}\nResponse: ${response}`]); // Add response to the list
     } catch (error) {
-
-      addLog('error', `command: ${command}\n\nError: ${error} `);
+      addLog('error', `Command: ${command}\nError: ${error}`);
+      setResponses((prev) => [...prev, `Command: ${command}\nError: ${error}`]); // Add error to the list
     }
   };
   const handleSendCustomCommand = () => {
     if (customCommand.trim() === '') {
       addLog('error', 'No command to send.');
+      toast.error('Please enter a command to send.');
       return;
     }
     testCommand(customCommand); // Call testCommand with the custom command
@@ -92,7 +95,7 @@ export function SCPIReference() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+    <div className="bg-white/20 dark:bg-gray-800/20 rounded-lg shadow-lg p-4 backdrop-blur-lg border border-gray-200 dark:border-gray-700">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         SCPI Reference
       </h2>
@@ -139,7 +142,7 @@ export function SCPIReference() {
               {commands.map((cmd) => (
                 <div
                   key={cmd.command}
-                  className="p-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <code className="text-sm font-mono text-blue-600 dark:text-blue-400">
@@ -178,6 +181,28 @@ export function SCPIReference() {
         ))}
       </div>
 
+      {/* Scrollable Response Section */}
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Command Responses
+        </h3>
+        <div className="max-h-48 overflow-y-auto bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+          {responses.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No responses yet.</p>
+          ) : (
+            responses.map((response, index) => (
+              <div
+                key={index}
+                className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md shadow-sm"
+              >
+                <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                  {response}
+                </pre>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

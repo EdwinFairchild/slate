@@ -12,7 +12,7 @@ export function DeviceStatus() {
 
   if (!device) {
     return (
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4">
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-md p-4">
         <p className="text-yellow-800 dark:text-yellow-200">
           No device selected. Use the sidebar to select a device.
         </p>
@@ -21,9 +21,9 @@ export function DeviceStatus() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-md shadow p-4">
       <div className="flex items-center space-x-4">
-        <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+        <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-md">
           <Activity className="h-6 w-6 text-blue-600 dark:text-blue-300" />
         </div>
         <div>
@@ -36,9 +36,8 @@ export function DeviceStatus() {
         </div>
         <div className="ml-auto flex items-center">
           <span
-            className={`h-2.5 w-2.5 rounded-full mr-2 ${
-              device.isConnected ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-            }`}
+            className={`h-2.5 w-2.5 rounded-full mr-2 ${device.isConnected ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
           />
           <span className="text-sm text-gray-600 dark:text-gray-300">
             {device.isConnected ? 'Connected' : 'Disconnected'}

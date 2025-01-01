@@ -205,10 +205,10 @@ export function AnalyzePage() {
     <div className="h-full flex flex-col space-y-4">
 
       <div className="flex flex-1 space-x-4 min-h-0">
-        <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 overflow-y-auto">
+        <div className="w-64 bg-white dark:bg-gray-800 rounded-md shadow-sm p-3 overflow-y-auto">
           <button
             onClick={handleDirectoryOpen}
-            className="flex items-center px-3 py-2  rounded-lg bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition mb-2"
+            className="flex items-center px-3 py-2  rounded-md bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition mb-2"
           >
             <FolderOpen className="h-4 w-4 mr-2" />
             Open Directory
@@ -237,7 +237,7 @@ export function AnalyzePage() {
 
 
               </div>
-              <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 min-h-0">
+              <div className="flex-1 bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 min-h-0">
                 <CSVPreview
                   headers={headers}
                   data={data}
@@ -247,13 +247,13 @@ export function AnalyzePage() {
 
               </div>
               <Alert
-          message="Make a back-up of your original file before you edit!!!"
-          type="error"
-        />
+                message="Make a back-up of your original file before you edit!!!"
+                type="error"
+              />
 
               <button
                 onClick={handleSaveFile}
-                className="px-3 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
+                className="px-3 py-2 rounded-md bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
               >
                 Save changes to file
               </button>

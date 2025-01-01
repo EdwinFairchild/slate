@@ -11,7 +11,7 @@ import { useTheme } from './hooks/useTheme';
 import { TestResultsTable } from './components/TestResultsTable';
 import type { SCPICommand, Device, LogMessage, Page } from './types';
 import type { TestResult } from './types/test';
-import { toast, ToastContainer, Flip, Bounce, Zoom , Slide } from 'react-toastify';
+import { toast, ToastContainer, Flip, Bounce, Zoom, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
@@ -168,14 +168,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-r from-gray-100 to-gray-150 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       <Sidebar
-        isOpen={isSidebarOpen}
-        devices={devices}
-        isSearching={isSearching}
-        activePage={activePage}
-        onSearchDevices={handleSearchDevices}
-        onNavigate={setActivePage}
+      isOpen={isSidebarOpen}
+      devices={devices}
+      isSearching={isSearching}
+      activePage={activePage}
+      onSearchDevices={handleSearchDevices}
+      onNavigate={setActivePage}
       />
 
       <div
@@ -187,7 +187,7 @@ export default function App() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 <Menu className="h-5 w-5" />
               </button>
@@ -198,13 +198,13 @@ export default function App() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
               <button
                 onClick={() => setIsLogsOpen(!isLogsOpen)}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               >
                 Logs
               </button>
@@ -220,7 +220,7 @@ export default function App() {
           </div>
 
           <div className="mt-6">
-            
+
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
               Test Results
             </h2>

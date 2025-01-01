@@ -14,7 +14,10 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@heroicons/react": "^2.2.0",
+    "@mui/material": "^6.3.0",
     "chart.js": "^4.4.7",
     "chartjs-plugin-zoom": "^2.2.0",
     "csv-parser": "^3.0.0",
@@ -29,7 +32,8 @@
     "react-dom": "^18.3.1",
     "react-toastify": "^11.0.2",
     "recharts": "^2.12.2",
-    "stringify": "^5.2.0"
+    "stringify": "^5.2.0",
+    "tailwindcss-filters": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
