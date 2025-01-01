@@ -140,7 +140,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   aria-describedby="expanded-test-content"
 >
   <div
-    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/20 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[80vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
+    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/40 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[80vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
   >
     {expandedTest && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -158,7 +158,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
               onChange={(e) =>
                 handleTestChange(expandedTest.id, { name: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+              className="focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -172,7 +172,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
               onChange={(e) =>
                 handleTestChange(expandedTest.id, { interval: Number(e.target.value) })
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+              className=" focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -186,7 +186,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
               onChange={(e) =>
                 handleTestChange(expandedTest.id, { duration: Number(e.target.value) })
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+              className="focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
             />
           </div>
 

@@ -24,31 +24,31 @@ const scpiCommands: SCPICommand[] = [
     command: 'C1:PAVA? FREQ?',
     description: 'Read Freq of ch:1'
   },
-  // {
-  //   category: 'Measurement',
-  //   command: 'C1:BSWV?',
-  //   description: 'Reads basic wave parameters'
-  // },
-  // {
-  //   category: 'Measurement',
-  //   command: 'MEAS:CURR?',
-  //   description: 'Measure current'
-  // },
-  // {
-  //   category: 'Measurement',
-  //   command: 'MEAS:RES?',
-  //   description: 'Measure resistance'
-  // },
-  // {
-  //   category: 'Configuration',
-  //   command: 'CONF:VOLT:DC',
-  //   description: 'Configure for DC voltage measurements'
-  // },
-  // {
-  //   category: 'Configuration',
-  //   command: 'CONF:CURR:DC',
-  //   description: 'Configure for DC current measurements'
-  // }
+  {
+    category: 'Measurement',
+    command: 'C1:BSWV?',
+    description: 'Reads basic wave parameters'
+  },
+  {
+    category: 'Measurement',
+    command: 'MEAS:CURR?',
+    description: 'Measure current'
+  },
+  {
+    category: 'Measurement',
+    command: 'MEAS:RES?',
+    description: 'Measure resistance'
+  },
+  {
+    category: 'Configuration',
+    command: 'CONF:VOLT:DC',
+    description: 'Configure for DC voltage measurements'
+  },
+  {
+    category: 'Configuration',
+    command: 'CONF:CURR:DC',
+    description: 'Configure for DC current measurements'
+  }
 ];
 
 export function SCPIReference() {
@@ -95,10 +95,10 @@ export function SCPIReference() {
   };
 
   return (
-    <div className="bg-white/20 dark:bg-gray-800/20 rounded-lg shadow-lg p-4 backdrop-blur-lg border border-gray-200 dark:border-gray-700">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+    <div className="bg-white/0 dark:bg-gray-800/0 rounded-lg shadow-lg p-4 backdrop-blur-lg border border-gray-200 dark:border-gray-700">
+      <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-4">
         SCPI Reference
-      </h2>
+      </h3>
       {/* Custom Command Input and Button */}
       <div className="flex items-center mb-4 space-x-2">
         <input
@@ -106,7 +106,7 @@ export function SCPIReference() {
           value={customCommand}
           onChange={(e) => setCustomCommand(e.target.value)}
           placeholder="Enter SCPI command..."
-          className="flex-1 pl-3 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+           className=" focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
         />
         <button
           onClick={handleSendCustomCommand}
@@ -121,7 +121,7 @@ export function SCPIReference() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search commands..."
-          className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+          className="focus:outline-none w-full pl-10 pr-4 py-2  px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
         />
         <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
       </div>
@@ -162,10 +162,10 @@ export function SCPIReference() {
                       </button>
                       <button
                         onClick={() => testCommand(cmd.command)}
-                        className="p-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                        className="p-2 rounded-md border border-gray-500 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
                         title="Test command"
                       >
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-gray-600 dark:text-white">
                           Test
                         </span>
                       </button>
@@ -183,7 +183,7 @@ export function SCPIReference() {
 
       {/* Scrollable Response Section */}
       <div className="mt-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-2">
           Command Responses
         </h3>
         <div className="max-h-48 overflow-y-auto bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-200 dark:border-gray-600">

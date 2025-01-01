@@ -54,7 +54,7 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
               type="text"
               value={command.command}
               onChange={(e) => handleCommandChange(index, 'command', e.target.value)}
-              className="block w-full h-9 px-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm bg-gray-50/50 dark:bg-gray-700/50"
+              className="focus:outline-none block w-full h-9 px-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm bg-gray-50/50 dark:bg-gray-700/50"
               placeholder="e.g., *IDN?"
               required
             />
@@ -67,7 +67,7 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
                 onChange={(e) =>
                   handleCommandChange(index, 'runOnce', e.target.checked)
                 }
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="focus:outline-none h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">Run once</span>
             </div>
@@ -83,7 +83,7 @@ export function CommandForm({ commands, chainCommands, onCommandsChange }: Comma
               type="number"
               value={command.waitAfter}
               onChange={(e) => handleCommandChange(index, 'waitAfter', Number(e.target.value))}
-              className="block w-full h-9 px-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm bg-gray-50/50 dark:bg-gray-700/50"
+              className="focus:outline-none block w-full h-9 px-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm bg-gray-50/50 dark:bg-gray-700/50"
               min="0"
             />
           </div>
