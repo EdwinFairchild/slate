@@ -73,7 +73,7 @@ export function CSVPreview({ headers, data, onApplyRegex, onUndoRegex }: CSVPrev
                   placeholder="regex"
                   value={regexInputs[header]}
                   onChange={e => handleRegexChange(header, e.target.value)}
-                  className="block w-20 max-w-xs max-w-xs h-9 px-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  className="block w-40 max-w-xs max-w-xs h-9 px-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
                 />
                 {/* Apply Button */}
                 <button
