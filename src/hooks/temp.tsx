@@ -52,7 +52,7 @@ export function AnalyzePage() {
         <p className="text-red-600 font-bold">!!Make a back-up of your original file before you edit!!!</p>
         <button
           onClick={handleDirectoryOpen}
-          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
           <FolderOpen className="h-4 w-4 mr-2" />
           Open Directory
@@ -60,7 +60,7 @@ export function AnalyzePage() {
       </div>
 
       <div className="flex flex-1 space-x-4 min-h-0">
-        <div className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3">
+        <div className="w-64 bg-white dark:bg-gray-800 rounded-md shadow-sm p-3">
           <FileList files={files} selectedFile={selectedFile} onFileSelect={handleFileSelect} />
         </div>
 
@@ -73,10 +73,10 @@ export function AnalyzePage() {
             <div className="flex-1 flex items-center justify-center text-red-600">{error}</div>
           ) : selectedFile && headers.length > 0 ? (
             <>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4">
                 <CSVEditor headers={headers} data={data[0]} onUpdateColumn={updateColumn} />
               </div>
-              <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 min-h-0">
+              <div className="flex-1 bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 min-h-0">
                 <CSVPreview headers={headers} data={data} />
               </div>
             </>

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Search, Copy, Check } from 'lucide-react';
 import { useDevice } from '../components/DeviceContext';
+import { toast } from 'react-toastify';
 interface SCPICommand {
   category: string;
   command: string;
@@ -23,38 +24,39 @@ const scpiCommands: SCPICommand[] = [
     command: 'C1:PAVA? FREQ?',
     description: 'Read Freq of ch:1'
   },
-  // {
-  //   category: 'Measurement',
-  //   command: 'C1:BSWV?',
-  //   description: 'Reads basic wave parameters'
-  // },
-  // {
-  //   category: 'Measurement',
-  //   command: 'MEAS:CURR?',
-  //   description: 'Measure current'
-  // },
-  // {
-  //   category: 'Measurement',
-  //   command: 'MEAS:RES?',
-  //   description: 'Measure resistance'
-  // },
-  // {
-  //   category: 'Configuration',
-  //   command: 'CONF:VOLT:DC',
-  //   description: 'Configure for DC voltage measurements'
-  // },
-  // {
-  //   category: 'Configuration',
-  //   command: 'CONF:CURR:DC',
-  //   description: 'Configure for DC current measurements'
-  // }
+  {
+    category: 'Measurement',
+    command: 'C1:BSWV?',
+    description: 'Reads basic wave parameters'
+  },
+  {
+    category: 'Measurement',
+    command: 'MEAS:CURR?',
+    description: 'Measure current'
+  },
+  {
+    category: 'Measurement',
+    command: 'MEAS:RES?',
+    description: 'Measure resistance'
+  },
+  {
+    category: 'Configuration',
+    command: 'CONF:VOLT:DC',
+    description: 'Configure for DC voltage measurements'
+  },
+  {
+    category: 'Configuration',
+    command: 'CONF:CURR:DC',
+    description: 'Configure for DC current measurements'
+  }
 ];
-
 export function SCPIReference() {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const { selectedDevice, addLog } = useDevice();
   const [customCommand, setCustomCommand] = useState('');
+  const [responses, setResponses] = useState<string[]>([]); // To store command responses
+
   const filteredCommands = scpiCommands.filter(cmd =>
     cmd.command.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cmd.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,33 +71,35 @@ export function SCPIReference() {
 
   const testCommand = async (command: string) => {
     if (!selectedDevice?.isConnected) {
-
-      addLog('error', "No connected device selected.");
+      addLog('error', 'No connected device selected.');
+      toast.error('Please connect to a device first.');
       return;
     }
     try {
       const response = await window.api.testCommand(command);
-
-      addLog('info', `command sent: ${command}\n\nResponse: ${response}`);
+      addLog('info', `Command sent: ${command}\nResponse: ${response}`);
+      setResponses((prev) => [...prev, `Command: ${command}\nResponse: ${response}`]);
     } catch (error) {
-
-      addLog('error', `command: ${command}\n\nError: ${error} `);
+      addLog('error', `Command: ${command}\nError: ${error}`);
+      setResponses((prev) => [...prev, `Command: ${command}\nError: ${error}`]);
     }
   };
+
   const handleSendCustomCommand = () => {
     if (customCommand.trim() === '') {
       addLog('error', 'No command to send.');
+      toast.error('Please enter a command to send.');
       return;
     }
-    testCommand(customCommand); // Call testCommand with the custom command
-    //setCustomCommand(''); // Clear the input field after sending
+    testCommand(customCommand);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+    <div className="bg-white/0 dark:bg-gray-800/0 rounded-lg shadow-lg p-4 backdrop-blur-lg border border-gray-00 dark:border-gray-900 px-6 py-6">
+      <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-4">
         SCPI Reference
-      </h2>
+      </h3>
+
       {/* Custom Command Input and Button */}
       <div className="flex items-center mb-4 space-x-2">
         <input
@@ -103,7 +107,7 @@ export function SCPIReference() {
           value={customCommand}
           onChange={(e) => setCustomCommand(e.target.value)}
           placeholder="Enter SCPI command..."
-          className="flex-1 pl-3 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+          className="focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
         />
         <button
           onClick={handleSendCustomCommand}
@@ -112,18 +116,21 @@ export function SCPIReference() {
           Send
         </button>
       </div>
+
+      {/* Search Input */}
       <div className="relative mb-4">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search commands..."
-          className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+          className="focus:outline-none w-full pl-10 pr-4 py-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
         />
         <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
       </div>
 
-      <div className="space-y-4 overflow-hidden">
+      {/* Scrollable Commands Section */}
+      <div className="max-h-72 overflow-y-auto space-y-4">
         {Object.entries(
           filteredCommands.reduce((acc, cmd) => {
             if (!acc[cmd.category]) acc[cmd.category] = [];
@@ -139,7 +146,7 @@ export function SCPIReference() {
               {commands.map((cmd) => (
                 <div
                   key={cmd.command}
-                  className="p-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  className="p-2 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <code className="text-sm font-mono text-blue-600 dark:text-blue-400">
@@ -159,10 +166,10 @@ export function SCPIReference() {
                       </button>
                       <button
                         onClick={() => testCommand(cmd.command)}
-                        className="p-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                        className="p-2 rounded-md border border-gray-500 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
                         title="Test command"
                       >
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-gray-600 dark:text-white">
                           Test
                         </span>
                       </button>
@@ -178,6 +185,28 @@ export function SCPIReference() {
         ))}
       </div>
 
+      {/* Scrollable Response Section */}
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-2">
+          Command Responses
+        </h3>
+        <div className="max-h-48 overflow-y-auto bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+          {responses.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No responses yet.</p>
+          ) : (
+            responses.map((response, index) => (
+              <div
+                key={index}
+                className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md shadow-sm"
+              >
+                <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                  {response}
+                </pre>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Plus, ChevronUp, ChevronDown, Play, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Paper, Button, Typography, TextField, Modal } from '@mui/material';
+import { ChevronDown, ChevronUp, Trash2, Plus, Play } from 'lucide-react';
 import { Switch } from './ui/Switch';
 import { CommandForm } from './CommandForm';
-import type { Command } from '../types/test';
-import { useDevice } from '../components/DeviceContext';
+import { SCPIReference } from './SCPIReference';
+// import { useTheme } from '@mui/material/styles'
+import { useThemeContext } from './ThemeProvider';
+interface Command {
+  command: string;
+  runOnce: boolean;
+  waitAfter: number;
+}
 
 interface Test {
   id: string;
@@ -13,7 +20,7 @@ interface Test {
   chainCommands: boolean;
   commands: Command[];
   isExpanded: boolean;
-  firstCol: "Timestamp" | "Index" | "Both"; // New property
+  firstCol: 'Timestamp' | 'Index' | 'Both';
 }
 
 interface TestSetupProps {
@@ -22,22 +29,24 @@ interface TestSetupProps {
 
 export function TestSetup({ onStartTest }: TestSetupProps) {
   const [tests, setTests] = useState<Test[]>([]);
-  const { addLog } = useDevice();
-  const hasLoadedRef = React.useRef(false);
+  const [expandedTest, setExpandedTest] = useState<Test | null>(null);
+  const hasLoadedRef = useRef(false);
   const oldTestsRef = useRef<Test[]>([]);
-
+  const { theme } = useThemeContext(); // Access the current theme
+  // Load tests from API
   useEffect(() => {
     (async () => {
       try {
-        const loaded = await window.api.getTests();
-        setTests(loaded);
-        hasLoadedRef.current = true; // Mark that we've done our initial load
+        const loadedTests: Test[] = await window.api.getTests();
+        setTests(loadedTests);
+        hasLoadedRef.current = true;
       } catch (err) {
-        addLog('error', 'Error loading tests from file:', err);
+        console.error('Error loading tests from file:', err);
       }
     })();
   }, []);
 
+  // Save tests to API whenever they change
   useEffect(() => {
     if (JSON.stringify(tests) !== JSON.stringify(oldTestsRef.current)) {
       window.api.saveTests(tests);
@@ -46,19 +55,17 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   }, [tests]);
 
   const handleAddTest = () => {
-    setTests((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        name: '',
-        duration: 1,
-        interval: 1000,
-        chainCommands: false,
-        commands: [{ command: '', runOnce: false, waitAfter: 0 }],
-        isExpanded: true,
-        firstCol: "Index", // Default value
-      },
-    ]);
+    const newTest: Test = {
+      id: crypto.randomUUID(),
+      name: '',
+      duration: 1,
+      interval: 1000,
+      chainCommands: false,
+      commands: [{ command: '', runOnce: false, waitAfter: 0 }],
+      isExpanded: false,
+      firstCol: 'Index',
+    };
+    setTests((prev) => [...prev, newTest]);
   };
 
   const handleRemoveTest = (id: string) => {
@@ -66,197 +73,201 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   };
 
   const toggleExpand = (id: string) => {
-    setTests((prev) =>
-      prev.map((test) =>
-        test.id === id ? { ...test, isExpanded: !test.isExpanded } : test
-      )
-    );
+    const selectedTest = tests.find((test) => test.id === id);
+    setExpandedTest((prev) => (prev?.id === id ? null : selectedTest || null));
   };
 
   const handleTestChange = (id: string, changes: Partial<Test>) => {
     setTests((prev) =>
       prev.map((test) => (test.id === id ? { ...test, ...changes } : test))
     );
+
+    if (expandedTest?.id === id) {
+      setExpandedTest((prev) => (prev ? { ...prev, ...changes } : null));
+    }
   };
 
   const handleSubmit = (test: Test) => async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!test.firstCol) {
-      alert("Please select at least one test type.");
-      return;
-    }
-
     const { id, isExpanded, ...testData } = test;
-    try {
-      await onStartTest(testData);
-    } catch (error) {
-      addLog('error', `Failed to start test: ${error.message || error}`);
-    }
+    await onStartTest(testData);
+    setExpandedTest(null);
   };
 
   return (
-    <div className="space-y-3">
-      {/* Render all tests */}
-      {tests.map((test) => (
-        <div key={test.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-          <div className="p-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => toggleExpand(test.id)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {test.isExpanded ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div className="relative">
+  {/* Blurred Background */}
+  {expandedTest && (
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-lg z-50"></div>
+  )}
+    <div>
+      {/* Grid layout for tests */}
+      <div
+        className="grid gap-4"
+        style={{
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        }}
+      >
+        {tests.map((test) => (
+          <div
+            key={test.id}
+            className="p-4 rounded-lg transition-transform duration-300 backdrop-blur-lg shadow-lg
+            bg-white/100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700
+            hover:translate-y-[-8px] hover:shadow-xl "
+          >
+            <div className="flex justify-between items-center mb-2" onClick={() => toggleExpand(test.id)}>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
                 {test.name || 'New Test'}
-              </h2>
+              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent click from propagating to the parent
+                    handleRemoveTest(test.id);
+                  }}
+                  className="p-2 rounded-full bg-red-100 dark:bg-gray-700 hover:bg-red-200 dark:hover:bg-gray-600
+                    text-red-600 dark:text-gray-300 hover:text-red-800 dark:hover:text-gray-100"
+                >
+                  <Trash2 />
+                </button>
+
+              </div>
             </div>
-            <button
-              onClick={() => handleRemoveTest(test.id)}
-              className="p-1.5 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal for expanded test */}
+      <Modal
+  open={!!expandedTest}
+  onClose={() => setExpandedTest(null)}
+  aria-labelledby="expanded-test-modal"
+  aria-describedby="expanded-test-content"
+>
+  <div
+   className={`focus:outline-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/100 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[90vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700 ${
+    expandedTest ? 'animate-fadeIn' : 'animate-fadeOut'
+  }`}  >
+    {expandedTest && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left Column: Form */}
+        <form onSubmit={handleSubmit(expandedTest)} className="space-y-4 mt-4 mb-4 ml-4 ">
+          <h2 className="text-lg font-semibold mb-4">{expandedTest.name || 'New Test'}</h2>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Test Name
+            </label>
+            <input
+              type="text"
+              value={expandedTest.name}
+              onChange={(e) =>
+                handleTestChange(expandedTest.id, { name: e.target.value })
+              }
+              className="focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+            />
           </div>
 
-          {/* Expandable test form */}
-          {test.isExpanded && (
-            <form onSubmit={handleSubmit(test)} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Test Name
-                </label>
-                <input
-                  type="text"
-                  value={test.name}
-                  onChange={(e) => handleTestChange(test.id, { name: e.target.value })}
-                  className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  placeholder="Enter test name"
-                  required
-                />
-              </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Test Interval (ms)
+            </label>
+            <input
+              type="number"
+              value={expandedTest.interval}
+              onChange={(e) =>
+                handleTestChange(expandedTest.id, { interval: Number(e.target.value) })
+              }
+              className=" focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Test Interval (ms)
-                </label>
-                <input
-                  type="number"
-                  value={test.interval}
-                  onChange={(e) =>
-                    handleTestChange(test.id, { interval: Number(e.target.value) })
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Test Duration (minutes)
+            </label>
+            <input
+              type="number"
+              value={expandedTest.duration}
+              onChange={(e) =>
+                handleTestChange(expandedTest.id, { duration: Number(e.target.value) })
+              }
+              className="focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+            />
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Iteration Label
+            </h3>
+            <div className="flex space-x-2">
+              {['Timestamp', 'Index', 'Both'].map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() =>
+                    handleTestChange(expandedTest.id, { firstCol: label as Test['firstCol'] })
                   }
-                  className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  min="1"
-                  required
-                />
-              </div>
+                  className={`px-3 py-1.5 rounded-md ${
+                    expandedTest.firstCol === label
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Test Duration (minutes)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={test.duration}
-                  onChange={(e) =>
-                    handleTestChange(test.id, { duration: Number(e.target.value) })
-                  }
-                  className="block w-full h-9 px-3 rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  min="0"
-                  required
-                />
-              </div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Iteration label
-              </label>
-              <div className="flex space-x-4">
-                <label className="text-gray-700 dark:text-gray-300 flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-2" /* Adds spacing between the checkbox and text */
-                    checked={test.firstCol === "Timestamp" || test.firstCol === "Both"}
-                    onChange={(e) =>
-                      handleTestChange(test.id, {
-                        firstCol: e.target.checked
-                          ? test.firstCol === "Index"
-                            ? "Both"
-                            : "Timestamp"
-                          : "Index",
-                      })
-                    }
-                  />
-                  <span>Timestamp</span> {/* Wrap text with a span */}
-                </label>
-                <label className="text-gray-700 dark:text-gray-300 flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-2" /* Adds spacing between the checkbox and text */
-                    checked={test.firstCol === "Index" || test.firstCol === "Both"}
-                    onChange={(e) =>
-                      handleTestChange(test.id, {
-                        firstCol: e.target.checked
-                          ? test.firstCol === "Timestamp"
-                            ? "Both"
-                            : "Index"
-                          : "Timestamp",
-                      })
-                    }
-                  />
-                  <span>Index</span> {/* Wrap text with a span */}
-                </label>
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Chain Commands
+            </span>
+            <Switch
+              checked={expandedTest.chainCommands}
+              onChange={(checked) =>
+                handleTestChange(expandedTest.id, { chainCommands: checked })
+              }
+            />
+          </div>
 
+          <CommandForm
+            commands={expandedTest.commands}
+            chainCommands={expandedTest.chainCommands}
+            onCommandsChange={(commands) =>
+              handleTestChange(expandedTest.id, { commands })
+            }
+          />
 
-              <div className="flex items-center justify-between py-1">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Chain Commands
-                </span>
-                <Switch
-                  checked={test.chainCommands}
-                  onChange={(checked) => {
-                    handleTestChange(test.id, { chainCommands: checked });
-                  }}
-                  label="Enable command chaining"
-                  type="button" // Prevent form submission
-                  onClick={(e) => e.preventDefault()} // Prevent accidental form submission
-                />
-              </div>
+          <button
+            type="submit"
+            className="w-full py-2 mt-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md"
+          >
+            Start Test
+          </button>
+        </form>
 
-              <CommandForm
-                commands={test.commands}
-                chainCommands={test.chainCommands}
-                onCommandsChange={(commands) => handleTestChange(test.id, { commands })}
-                onSubmit={(e: React.FormEvent) => e.preventDefault()} // Prevent accidental form submission
-              />
+        {/* Right Column: SCPI Reference */}
+        <div className='mt-4 mb-4 mr-4'>
 
-
-              <button
-                type="submit"
-                className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Start Test
-              </button>
-            </form>
-          )}
+          <SCPIReference />
         </div>
-      ))}
+      </div>
+    )}
+  </div>
+</Modal>
+</div>
 
-      {/* Button to add a new test */}
-      <button
-        onClick={handleAddTest}
-        className="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add New Test
-      </button>
+      {/* Add New Test Button */}
+      <div className="flex justify-center mt-3">
+        <button
+          onClick={handleAddTest}
+          className="px-4 py-2 border border-dashed border-blue-500 rounded-md text-blue-500 hover:border-blue-700 hover:text-blue-700"
+        >
+          Add New Test
+        </button>
+      </div>
     </div>
   );
 
