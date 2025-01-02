@@ -27,7 +27,7 @@ export default function App() {
 
   const [logs, setLogs] = useState<LogMessage[]>([]);
   const [activePage, setActivePage] = useState<Page>('tests');
-
+  const [expandedTest, setExpandedTest] = useState(null); // Initialize expandedTest
   const instrument = MockInstrument.getInstance();
 
   // Listen for "test-completed" from main process
@@ -233,9 +233,13 @@ export default function App() {
             />
           </div>
         </div>
+        <SideLogs
+  isOpen={isLogsOpen}
+  onToggle={() => setIsLogsOpen(!isLogsOpen)}
+  isBlurred={!!expandedTest} // Use expandedTest correctly
+/>
       </div>
 
-      <SideLogs isOpen={isLogsOpen} onToggle={() => setIsLogsOpen(!isLogsOpen)} />
     </div>
   );
 }

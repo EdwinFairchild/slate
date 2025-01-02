@@ -95,6 +95,11 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   };
 
   return (
+    <div className="relative">
+  {/* Blurred Background */}
+  {expandedTest && (
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-md z-10"></div>
+  )}
     <div>
       {/* Grid layout for tests */}
       <div
@@ -140,7 +145,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   aria-describedby="expanded-test-content"
 >
   <div
-    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/40 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[80vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
+    className="focus:outline-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/100 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[80vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
   >
     {expandedTest && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -250,7 +255,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
     )}
   </div>
 </Modal>
-
+</div>
 
       {/* Add New Test Button */}
       <div className="flex justify-center mt-3">
