@@ -50,13 +50,13 @@ const scpiCommands: SCPICommand[] = [
     description: 'Configure for DC current measurements'
   }
 ];
-
 export function SCPIReference() {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const { selectedDevice, addLog } = useDevice();
   const [customCommand, setCustomCommand] = useState('');
   const [responses, setResponses] = useState<string[]>([]); // To store command responses
+
   const filteredCommands = scpiCommands.filter(cmd =>
     cmd.command.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cmd.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,20 +78,20 @@ export function SCPIReference() {
     try {
       const response = await window.api.testCommand(command);
       addLog('info', `Command sent: ${command}\nResponse: ${response}`);
-      setResponses((prev) => [...prev, `Command: ${command}\nResponse: ${response}`]); // Add response to the list
+      setResponses((prev) => [...prev, `Command: ${command}\nResponse: ${response}`]);
     } catch (error) {
       addLog('error', `Command: ${command}\nError: ${error}`);
-      setResponses((prev) => [...prev, `Command: ${command}\nError: ${error}`]); // Add error to the list
+      setResponses((prev) => [...prev, `Command: ${command}\nError: ${error}`]);
     }
   };
+
   const handleSendCustomCommand = () => {
     if (customCommand.trim() === '') {
       addLog('error', 'No command to send.');
       toast.error('Please enter a command to send.');
       return;
     }
-    testCommand(customCommand); // Call testCommand with the custom command
-    //setCustomCommand(''); // Clear the input field after sending
+    testCommand(customCommand);
   };
 
   return (
@@ -99,6 +99,7 @@ export function SCPIReference() {
       <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-4">
         SCPI Reference
       </h3>
+
       {/* Custom Command Input and Button */}
       <div className="flex items-center mb-4 space-x-2">
         <input
@@ -106,7 +107,7 @@ export function SCPIReference() {
           value={customCommand}
           onChange={(e) => setCustomCommand(e.target.value)}
           placeholder="Enter SCPI command..."
-           className=" focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+          className="focus:outline-none w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
         />
         <button
           onClick={handleSendCustomCommand}
@@ -115,18 +116,21 @@ export function SCPIReference() {
           Send
         </button>
       </div>
+
+      {/* Search Input */}
       <div className="relative mb-4">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search commands..."
-          className="focus:outline-none w-full pl-10 pr-4 py-2  px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
+          className="focus:outline-none w-full pl-10 pr-4 py-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50/50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100"
         />
         <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
       </div>
 
-      <div className="space-y-4 overflow-hidden">
+      {/* Scrollable Commands Section */}
+      <div className="max-h-72 overflow-y-auto space-y-4">
         {Object.entries(
           filteredCommands.reduce((acc, cmd) => {
             if (!acc[cmd.category]) acc[cmd.category] = [];

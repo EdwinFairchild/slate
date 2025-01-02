@@ -5,32 +5,27 @@ import { useDevice } from '../components/DeviceContext';
 interface SideLogsProps {
   isOpen: boolean;
   onToggle: () => void;
-  isBlurred?: boolean; // Add a prop to handle blur state
 }
 
-export function SideLogs({ isOpen, onToggle, isBlurred }: SideLogsProps) {
+export function SideLogs({ isOpen, onToggle }: SideLogsProps) {
   const { logs } = useDevice();
   const lastLogs = logs.slice(-10).reverse(); // Display last 10 logs
 
   return (
     <div
-      className={`fixed right-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-width duration-300 ${
+      className={`fixed right-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
         isOpen ? 'w-64' : 'w-0'
-      } overflow-hidden ${isBlurred ? 'backdrop-blur-sm bg-white/30 dark:bg-gray-800/30' : ''}`}
-      style={{ zIndex: 1000 }} // Ensure it overlays other elements
+      } overflow-hidden`}
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Logs</h2>
-        </div>
+        {/* Header */}
+     
 
+        {/* Logs */}
         <div className="flex-1 p-4 overflow-y-auto">
           {lastLogs.length > 0 ? (
             lastLogs.map((log, index) => (
-              <div
-                key={`${log.timestamp}-${index}`}
-                className="flex items-start space-x-2 mb-2"
-              >
+              <div key={`${log.timestamp}-${index}`} className="flex items-start space-x-2 mb-2">
                 {log.type === 'error' ? (
                   <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
                 ) : (

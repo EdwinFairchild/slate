@@ -98,7 +98,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
     <div className="relative">
   {/* Blurred Background */}
   {expandedTest && (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-md z-10"></div>
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-lg z-50"></div>
   )}
     <div>
       {/* Grid layout for tests */}
