@@ -175,7 +175,7 @@ export default function App() {
       {expandedTest && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10 pointer-events-none"></div>
       )}
-      <div className="min-h-screen bg-gradient-to-r from-gray-100 to-gray-150 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
+      <div className="min-h-screen bg-gradient-to-r from-gray-100 to-gray-150 dark:from-gray-900 dark:to-gray-850 transition-colors duration-200">
         <Sidebar
           isOpen={isSidebarOpen}
           devices={devices}

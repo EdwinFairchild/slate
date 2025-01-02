@@ -95,7 +95,7 @@ export function SCPIReference() {
   };
 
   return (
-    <div className="bg-white/0 dark:bg-gray-800/0 rounded-lg shadow-lg p-4 backdrop-blur-lg border border-gray-200 dark:border-gray-700">
+    <div className="bg-white/0 dark:bg-gray-800/0 rounded-lg shadow-lg p-4 backdrop-blur-lg border border-gray-00 dark:border-gray-900 px-6 py-6">
       <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-4">
         SCPI Reference
       </h3>

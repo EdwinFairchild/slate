@@ -113,7 +113,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
             key={test.id}
             className="p-4 rounded-lg transition-transform duration-300 backdrop-blur-lg shadow-lg
             bg-white/100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700
-            hover:translate-y-[-8px] hover:shadow-xl"
+            hover:translate-y-[-8px] hover:shadow-xl "
           >
             <div className="flex justify-between items-center mb-2" onClick={() => toggleExpand(test.id)}>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
@@ -145,12 +145,13 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   aria-describedby="expanded-test-content"
 >
   <div
-    className="focus:outline-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/100 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[90vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
-  >
+   className={`focus:outline-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/100 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[90vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700 ${
+    expandedTest ? 'animate-fadeIn' : 'animate-fadeOut'
+  }`}  >
     {expandedTest && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column: Form */}
-        <form onSubmit={handleSubmit(expandedTest)} className="space-y-4">
+        <form onSubmit={handleSubmit(expandedTest)} className="space-y-4 mt-4 mb-4 ml-4 ">
           <h2 className="text-lg font-semibold mb-4">{expandedTest.name || 'New Test'}</h2>
 
           <div className="mb-4">
@@ -248,7 +249,8 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
         </form>
 
         {/* Right Column: SCPI Reference */}
-        <div>
+        <div className='mt-4 mb-4 mr-4'>
+
           <SCPIReference />
         </div>
       </div>
