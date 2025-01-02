@@ -202,69 +202,74 @@ export function AnalyzePage() {
     fetchDirectory();
   }, [setDirectoryPath, setFiles, addLog]);
   return (
-    <div className="h-full flex flex-col space-y-4">
+  <div className="h-full flex flex-col space-y-4">
+    <div className="flex flex-1 space-x-4 min-h-0">
+      {/* File List Section */}
+      <div className="w-64 bg-white dark:bg-gray-800 rounded-md shadow-sm p-3 overflow-y-auto flex-shrink-0">
+        <button
+          onClick={handleDirectoryOpen}
+          className="flex items-center px-3 py-2 rounded-md bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition mb-2"
+        >
+          <FolderOpen className="h-4 w-4 mr-2" />
+          Open Directory
+        </button>
+        <FileList files={files} selectedFile={selectedFile} onFileSelect={handleFileSelect} />
+      </div>
 
-      <div className="flex flex-1 space-x-4 min-h-0">
-        <div className="w-64 bg-white dark:bg-gray-800 rounded-md shadow-sm p-3 overflow-y-auto">
-          <button
-            onClick={handleDirectoryOpen}
-            className="flex items-center px-3 py-2  rounded-md bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition mb-2"
-          >
-            <FolderOpen className="h-4 w-4 mr-2" />
-            Open Directory
-          </button>
-          <FileList files={files} selectedFile={selectedFile} onFileSelect={handleFileSelect} />
-        </div>
-
-        <div className="flex-1 flex flex-col space-y-4 min-h-0">
-          {loading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : error ? (
-            <div className="flex-1 flex items-center justify-center text-red-600">{error}</div>
-          ) : selectedFile && headers.length > 0 ? (
-            <>
-              <div>
-                <CSVEditor
-                  headers={headers}
-                  selectedXAxis={selectedXAxis}
-                  selectedYAxis={selectedYAxis}
-                  onSelectXAxis={handleSelectXAxis}
-                  onSelectYAxis={handleSelectYAxis}
-                  onGenerateChart={handleGenerateChart}
-                />
-
-
-              </div>
-              <div className="flex-1 bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 min-h-0">
-                <CSVPreview
-                  headers={headers}
-                  data={data}
-                  onApplyRegex={handleApplyRegex}
-                  onUndoRegex={handleUndoRegex} // Pass the undo function
-                />
-
-              </div>
-              <Alert
-                message="Make a back-up of your original file before you edit!!!"
-                type="error"
+      {/* Main Content Section */}
+      <div className="flex-1 flex flex-col space-y-4 min-h-0">
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : error ? (
+          <div className="flex-1 flex items-center justify-center text-red-600">{error}</div>
+        ) : selectedFile && headers.length > 0 ? (
+          <>
+            <div>
+              <CSVEditor
+                headers={headers}
+                selectedXAxis={selectedXAxis}
+                selectedYAxis={selectedYAxis}
+                onSelectXAxis={handleSelectXAxis}
+                onSelectYAxis={handleSelectYAxis}
+                onGenerateChart={handleGenerateChart}
               />
-
-              <button
-                onClick={handleSaveFile}
-                className="px-3 py-2 rounded-md bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
-              >
-                Save changes to file
-              </button>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              Select a CSV file to view and edit its contents
             </div>
-          )}
-        </div>
+
+            {/* Scrollable CSVPreview Section */}
+            <div
+              className="flex-1 bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 min-h-0 overflow-auto"
+              style={{ maxWidth: '100%' }}
+            >
+              <CSVPreview
+                headers={headers}
+                data={data}
+                onApplyRegex={handleApplyRegex}
+                onUndoRegex={handleUndoRegex} // Pass the undo function
+              />
+            </div>
+
+            <Alert
+              message="Make a back-up of your original file before you edit!!!"
+              type="error"
+            />
+
+            <button
+              onClick={handleSaveFile}
+              className="px-3 py-2 rounded-md bg-blue-400 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
+            >
+              Save changes to file
+            </button>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select a CSV file to view and edit its contents
+          </div>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
+
 }
