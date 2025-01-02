@@ -86,7 +86,7 @@ export function CSVPreview({ headers, data, onApplyRegex, onUndoRegex }: CSVPrev
               {/* Undo Button */}
               <button
                 onClick={() => handleUndoRegex(header)}
-                className="mt-2 w-full px-2 py-1 text-sm bg-gray-400 dark:bg-gray-600 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-700 transition"
+                className="mt-2 w-40 px-2 py-1 text-sm bg-gray-400 dark:bg-gray-600 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-700 transition"
               >
                 Undo
               </button>
