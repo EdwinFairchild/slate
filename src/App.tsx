@@ -72,6 +72,7 @@ export default function App() {
       }
 
       addLog('info', `Test started successfully.\nSaving to: ${result.logFilePath}`);
+      toast.success(`Test started successfully.`);
       setTests((prevTests) => [
         ...prevTests,
         {
@@ -86,6 +87,7 @@ export default function App() {
       ]);
     } catch (error) {
       addLog('error', `Unexpected error: ${error}`);
+      toast.error(`Failed to start test: ${error}`);
       throw error;
     }
   };

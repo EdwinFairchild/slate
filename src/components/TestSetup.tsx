@@ -145,7 +145,7 @@ export function TestSetup({ onStartTest }: TestSetupProps) {
   aria-describedby="expanded-test-content"
 >
   <div
-    className="focus:outline-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/100 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[80vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
+    className="focus:outline-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl bg-white/100 dark:bg-gray-800/30 text-gray-900 dark:text-gray-100 shadow-lg rounded-lg p-6 max-h-[90vh] overflow-y-auto backdrop-blur-lg border border-gray-200 dark:border-gray-700"
   >
     {expandedTest && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
