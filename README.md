@@ -40,4 +40,6 @@ npm run dev
 Download the latest packaged version of SLATE for your operating system from the Releases page. Simply download, install, and run the app—no additional setup is needed.
 
 ![Dark Mode](dark.png)
+![Dark Mode](dark_test.png)
 ![Light Mode](light.png)
+![Light Mode](light_test.png)
